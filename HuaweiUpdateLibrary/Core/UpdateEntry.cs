@@ -45,7 +45,7 @@ namespace HuaweiUpdateLibrary.Core
                 // Verify crc
                 if (_fileHeader.HeaderChecksum != crc)
                 {
-                    throw new Exception("Checksum error @" + stream.Position + ": " + _fileHeader.HeaderChecksum + "<>" + crc);
+                    throw new Exception(string.Format("Checksum error @{0:X08}: {1:X04}<>{2:X04}", stream.Position, _fileHeader.HeaderChecksum, crc));
                 }
             }
 
@@ -209,8 +209,8 @@ namespace HuaweiUpdateLibrary.Core
                     // Verify
                     if (crc != _checkSumTable[blockNumber])
                     {
-                        throw new Exception("Checksum error in block " + blockNumber + " @" + (reader.Position - size) +
-                            ": " + _checkSumTable[blockNumber] + "<>" + crc);
+                        throw new Exception(string.Format("Checksum error in block {0}@{1:X08}: {2:X04}<>{3:X04}", blockNumber, (reader.Position - size),
+                            _checkSumTable[blockNumber], crc));
                     }
                 }
 
