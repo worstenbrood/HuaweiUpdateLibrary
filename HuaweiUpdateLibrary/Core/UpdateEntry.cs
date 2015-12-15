@@ -8,10 +8,8 @@ namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateEntry
     {
-        private static UpdateCrc16 _updateCrc = new UpdateCrc16();
-
+        private static readonly UpdateCrc16 UpdateCrc = new UpdateCrc16();
         private const UInt32 FileMagic = 0xA55AAA55;
-        
         private FileHeader _fileHeader;
         private readonly long _dataOffset;
         private readonly ushort[] _checkSumTable;
@@ -41,11 +39,8 @@ namespace HuaweiUpdateLibrary.Core
                 // Convert
                 Utilities.TypeToByte(_fileHeader, out byteHeader);
 
-                // Initialize crc
-                _updateCrc.Initialize();
-
                 // Calculate checksum
-                _fileHeader.HeaderChecksum = BitConverter.ToUInt16(_updateCrc.ComputeHash(byteHeader, 0, byteHeader.Length), 0);
+                _fileHeader.HeaderChecksum = BitConverter.ToUInt16(UpdateCrc.ComputeHash(byteHeader, 0, byteHeader.Length), 0);
 
                 // Verify crc
                 if (_fileHeader.HeaderChecksum != crc)
@@ -208,7 +203,15 @@ namespace HuaweiUpdateLibrary.Core
                 // Verify crc
                 if (checksum)
                 {
-                    var crc = _checkSumTable[blockNumber];
+                    // Calculate block crc
+                    var crc = BitConverter.ToUInt16(UpdateCrc.ComputeHash(buffer, 0, size), 0);
+
+                    // Verify
+                    if (crc != _checkSumTable[blockNumber])
+                    {
+                        throw new Exception("Checksum error in block " + blockNumber + " @" + (reader.Position - size) +
+                            ": " + _checkSumTable[blockNumber] + "<>" + crc);
+                    }
                 }
 
                 // Write to output file

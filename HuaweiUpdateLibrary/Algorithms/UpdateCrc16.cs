@@ -81,7 +81,12 @@ namespace HuaweiUpdateLibrary.Algorithms
 
         protected override byte[] HashFinal()
         {
-            return BitConverter.GetBytes((ushort)((BitConverter.ToUInt16(HashValue, 0) ^ _xorValue) & 0xFFFF));
+            var result = BitConverter.GetBytes((ushort)((BitConverter.ToUInt16(HashValue, 0) ^ _xorValue) & 0xFFFF));
+
+            // Reinit
+            HashValue = BitConverter.GetBytes(_initialSum);
+
+            return result;
         }
     }
 }
