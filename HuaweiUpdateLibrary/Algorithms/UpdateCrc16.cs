@@ -88,5 +88,15 @@ namespace HuaweiUpdateLibrary.Algorithms
 
             return result;
         }
+
+        public override bool CanReuseTransform
+        {
+            get { return true; }
+        }
+
+        public override bool CanTransformMultipleBlocks
+        {
+            get { return true; }
+        }
     }
 }
