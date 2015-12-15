@@ -1,12 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using HuaweiUpdateLibrary.Algorithms;
 using HuaweiUpdateLibrary.Streams;
 
 namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateEntry
     {
+        private static UpdateCrc16 _updateCrc = new UpdateCrc16();
+
         private const UInt32 FileMagic = 0xA55AAA55;
         
         private FileHeader _fileHeader;
@@ -28,7 +31,27 @@ namespace HuaweiUpdateLibrary.Core
             // Validate checksum
             if (checksum)
             {
+                var crc = _fileHeader.HeaderChecksum;
 
+                // Reset checksum
+                _fileHeader.HeaderChecksum = 0;
+
+                byte[] byteHeader;
+
+                // Convert
+                Utilities.TypeToByte(_fileHeader, out byteHeader);
+
+                // Initialize crc
+                _updateCrc.Initialize();
+
+                // Calculate checksum
+                _fileHeader.HeaderChecksum = BitConverter.ToUInt16(_updateCrc.ComputeHash(byteHeader, 0, byteHeader.Length), 0);
+
+                // Verify crc
+                if (_fileHeader.HeaderChecksum != crc)
+                {
+                    throw new Exception("Checksum error @" + stream.Position + ": " + _fileHeader.HeaderChecksum + "<>" + crc);
+                }
             }
 
             // Calculate checksum table size
