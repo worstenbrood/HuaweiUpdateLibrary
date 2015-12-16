@@ -51,7 +51,6 @@ namespace HuaweiUpdateLibrary.Core
             }
         }
        
-
         private List<UpdateEntry> _entries;
 
         private List<UpdateEntry> Entries

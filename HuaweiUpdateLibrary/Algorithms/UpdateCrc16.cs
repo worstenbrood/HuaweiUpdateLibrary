@@ -6,14 +6,9 @@ namespace HuaweiUpdateLibrary.Algorithms
     public class UpdateCrc16 : HashAlgorithm
     {
         private readonly ushort[] _table = new ushort[256];
-        private readonly ushort _initialSum;
         private readonly ushort _polynomial = 0x8408;
         private readonly ushort _xorValue = 0xFFFF;
-
-        private byte[] InitialSum
-        {
-            get { return BitConverter.GetBytes(_initialSum); }
-        }
+        private readonly byte[] _initialSum;
         
         private void InitializeTable()
         {
@@ -39,7 +34,7 @@ namespace HuaweiUpdateLibrary.Algorithms
         
         public UpdateCrc16(ushort initialSum = 0xFFFF, ushort polynomial = 0x8408, ushort xorValue = 0xFFFF)
         {
-            _initialSum = initialSum;
+            _initialSum = BitConverter.GetBytes(initialSum);
             _polynomial = polynomial;
             _xorValue = xorValue;
             
@@ -47,12 +42,12 @@ namespace HuaweiUpdateLibrary.Algorithms
             InitializeTable();
 
             // Initialize sum
-            HashValue = InitialSum;
+            HashValue = _initialSum;
         }
 
         public override void Initialize()
         {
-            HashValue = InitialSum;
+            HashValue = _initialSum;
         }
 
         protected override void HashCore(byte[] array, int ibStart, int cbSize)
@@ -89,7 +84,7 @@ namespace HuaweiUpdateLibrary.Algorithms
             var result = BitConverter.GetBytes((ushort)((BitConverter.ToUInt16(HashValue, 0) ^ _xorValue) & 0xFFFF));
 
             // Reinit
-            HashValue = InitialSum;
+            HashValue = _initialSum;
 
             return result;
         }
