@@ -13,48 +13,31 @@ namespace HuaweiUpdateLibrary.Core
         }
         
         private const long SkipBytes = 92;
-        private string _fileName;
+        private readonly string _fileName;
         
         private UpdateFile(string fileName, Mode mode, bool checksum = true)
         {
+            // Store filename
             _fileName = fileName;
 
-            // Only load if opened
-            if (mode != Mode.Open) 
-                return;
-
-            // Open stream
-            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            switch (mode)
             {
-                // Load entries
-                LoadEntries(stream, checksum);
+                case Mode.Open:
+                {
+                    // Load entries
+                    LoadEntries(checksum);
+                    break;
+                }
+
+                case Mode.Create:
+                {
+                    // Create file
+                    CreateFile();
+                    break;
+                }
             }
         }
 
-        private void LoadEntries(Stream stream, bool checksum)
-        {
-            // Skip first 92 bytes
-            stream.Seek(SkipBytes, SeekOrigin.Begin);
-
-            // Read file
-            while (stream.Position < stream.Length)
-            {
-                // Read entry
-                var entry = UpdateEntry.Read(stream, checksum);
-
-                // Add to list
-                Entries.Add(entry);
-
-                // Skip file data
-                stream.Seek(entry.FileSize, SeekOrigin.Current);
-
-                // Read remainder
-                var remainder = Utilities.UintSize - (int)(stream.Position % Utilities.UintSize);
-                if (remainder < Utilities.UintSize)
-                    stream.Seek(remainder, SeekOrigin.Current);
-            }
-        }
-       
         private List<UpdateEntry> _entries;
 
         private List<UpdateEntry> Entries
@@ -79,7 +62,45 @@ namespace HuaweiUpdateLibrary.Core
         {
             get { return Entries.Count; }
         }
-        
+
+        private void LoadEntries(bool checksum)
+        {
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                // Skip first 92 bytes
+                stream.Seek(SkipBytes, SeekOrigin.Begin);
+
+                // Read file
+                while (stream.Position < stream.Length)
+                {
+                    // Read entry
+                    var entry = UpdateEntry.Read(stream, checksum);
+
+                    // Add to list
+                    Entries.Add(entry);
+
+                    // Skip file data
+                    stream.Seek(entry.FileSize, SeekOrigin.Current);
+
+                    // Read remainder
+                    var remainder = Utilities.UintSize - (int)(stream.Position % Utilities.UintSize);
+                    if (remainder < Utilities.UintSize)
+                        stream.Seek(remainder, SeekOrigin.Current);
+                }
+            }
+        }
+
+        private void CreateFile()
+        {
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var buffer = new byte[SkipBytes];
+
+                // Write SkipBytes
+                stream.Write(buffer, 0, buffer.Length);
+            }
+        }
+
         /// <summary>
         /// Open an existing update file
         /// </summary>
