@@ -110,10 +110,8 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="checksum">Verify checksum</param>
         public void Extract(int index, string output, bool checksum = true)
         {
-            var entry = Entries[index];
-
             // Extract entry
-            Extract(entry, output, checksum);
+            Extract(Entries[index], output, checksum);
         }
 
         /// <summary>
@@ -136,10 +134,8 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="checksum">Verify checksum</param>
         public void Extract(int index, Stream output, bool checksum = true)
         {
-            var entry = Entries[index];
-
             // Extract entry
-            Extract(entry, output, checksum);
+            Extract(Entries[index], output, checksum);
         }
 
         /// <summary>
