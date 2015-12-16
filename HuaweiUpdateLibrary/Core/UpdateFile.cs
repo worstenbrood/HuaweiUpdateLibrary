@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -6,22 +7,29 @@ namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateFile : IEnumerable<UpdateEntry>
     {
-        private const long SkipBytes = 92;
-        
-        private UpdateFile(string fileName, bool checksum = true)
+        private enum Mode
         {
+            Open,
+            Create
+        }
+        
+        private const long SkipBytes = 92;
+        private string _fileName;
+        
+        private UpdateFile(string fileName, Mode mode, bool checksum = true)
+        {
+            _fileName = fileName;
+
+            // Only load if opened
+            if (mode != Mode.Open) 
+                return;
+
             // Open stream
-            using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 // Load entries
                 LoadEntries(stream, checksum);
             }
-        }
-
-        private UpdateFile(Stream stream, bool checksum = true)
-        {
-            // Load entries
-            LoadEntries(stream, checksum);
         }
 
         private void LoadEntries(Stream stream, bool checksum)
@@ -81,20 +89,71 @@ namespace HuaweiUpdateLibrary.Core
         /// <returns><see cref="UpdateFile"/></returns>
         public static UpdateFile Open(string fileName, bool checksum = true)
         {
-            return new UpdateFile(fileName, checksum);
+            return new UpdateFile(fileName, Mode.Open, checksum);
         }
 
         /// <summary>
-        /// Open an existing update file
+        /// Create an <see cref="UpdateFile"/>
         /// </summary>
-        /// <param name="stream"><see cref="Stream"/> to read from</param>
-        /// <param name="checksum">Verify header checksum</param>
+        /// <param name="fileName">Filename</param>
         /// <returns><see cref="UpdateFile"/></returns>
-        public static UpdateFile Open(Stream stream, bool checksum = true)
+        public static UpdateFile Create(string fileName)
         {
-            return new UpdateFile(stream, checksum);
+            return new UpdateFile(fileName, Mode.Create);
         }
-        
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="index"><see cref="UpdateEntry"/> index</param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(int index, string output, bool checksum = true)
+        {
+            var entry = Entries[index];
+
+            // Extract entry
+            Extract(entry, output, checksum);
+        }
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(UpdateEntry entry, string output, bool checksum = true)
+        {
+            // Extract entry
+            entry.Extract(_fileName, output, checksum);
+        }
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="index"><see cref="UpdateEntry"/> index</param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(int index, Stream output, bool checksum = true)
+        {
+            var entry = Entries[index];
+
+            // Extract entry
+            Extract(entry, output, checksum);
+        }
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(UpdateEntry entry, Stream output, bool checksum = true)
+        {
+            // Extract entry
+            entry.Extract(_fileName, output, checksum);
+        }
+
         /// <summary>
         /// Returns enumerator
         /// </summary>
