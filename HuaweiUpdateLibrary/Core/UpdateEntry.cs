@@ -130,7 +130,7 @@ namespace HuaweiUpdateLibrary.Core
             var checksumTableSize = _fileHeader.HeaderSize - FileHeader.Size;
 
             // Allocate checksum table
-            _checkSumTable = new ushort[checksumTableSize / sizeof(ushort)];
+            _checkSumTable = new ushort[checksumTableSize / Utilities.UshortSize];
 
             // Read checksum table
             for (var count = 0; count < _checkSumTable.Length; count++) { _checkSumTable[count] = reader.ReadUInt16(); }

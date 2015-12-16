@@ -6,7 +6,8 @@ namespace HuaweiUpdateLibrary.Core
 {
     internal static class Utilities
     {
-        public static readonly Int32 UintSize = Marshal.SizeOf(typeof(UInt32));
+        public const Int32 UintSize = sizeof (UInt32);
+        public const Int32 UshortSize = sizeof (ushort);
 
         public static bool ByteToType<T>(BinaryReader reader, out T result)
         {
