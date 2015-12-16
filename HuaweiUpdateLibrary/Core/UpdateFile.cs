@@ -14,7 +14,12 @@ namespace HuaweiUpdateLibrary.Core
         
         private const long SkipBytes = 92;
         private readonly string _fileName;
-        
+
+        public override string ToString()
+        {
+            return _fileName;
+        }
+
         private UpdateFile(string fileName, Mode mode, bool checksum = true)
         {
             // Store filename
@@ -170,6 +175,11 @@ namespace HuaweiUpdateLibrary.Core
             entry.Extract(_fileName, output, checksum);
         }
 
+        public void Add(UpdateEntry entry, Stream stream)
+        {
+            
+        }
+        
         /// <summary>
         /// Returns enumerator
         /// </summary>
