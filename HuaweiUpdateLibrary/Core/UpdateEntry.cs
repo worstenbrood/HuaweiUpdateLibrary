@@ -114,10 +114,8 @@ namespace HuaweiUpdateLibrary.Core
                 // Reset checksum
                 _fileHeader.HeaderChecksum = 0;
 
-                byte[] byteHeader;
-
-                // Convert
-                Utilities.TypeToByte(_fileHeader, out byteHeader);
+                // Get header
+                var byteHeader = GetHeader();
 
                 // Calculate checksum
                 _fileHeader.HeaderChecksum = BitConverter.ToUInt16(UpdateCrc.ComputeHash(byteHeader), 0);
@@ -267,6 +265,45 @@ namespace HuaweiUpdateLibrary.Core
                     // Extract
                     Extract(inputStream, outputStream, checksum);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Get the FileHeader converted to a byte array
+        /// </summary>
+        /// <returns>Byte array</returns>
+        public byte[] GetHeader()
+        {
+            byte[] result;
+
+            if (!Utilities.TypeToByte(_fileHeader, out result))
+                throw new Exception("TypeToByte() failed.");
+
+            return result;
+        }
+
+        /// <summary>
+        /// Write FileHeader to a stream
+        /// </summary>
+        /// <param name="stream">Output <see cref="Stream"/></param>
+        public void ExtractHeader(Stream stream)
+        {
+            var result = GetHeader();
+
+            // Write
+            stream.Write(result, 0, result.Length);
+        }
+
+        /// <summary>
+        /// Write FileHeader to a file
+        /// </summary>
+        /// <param name="output">Ouput file</param>
+        public void ExtractHeader(string output)
+        {
+            using (var stream = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                // Extract
+                ExtractHeader(stream);
             }
         }
     }
