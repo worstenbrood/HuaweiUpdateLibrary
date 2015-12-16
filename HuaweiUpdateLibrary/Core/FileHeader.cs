@@ -7,7 +7,7 @@ namespace HuaweiUpdateLibrary.Core
     // For some stuff ripped from split_updata.pl
 
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-    public struct FileHeader
+    internal struct FileHeader
     {
         public UInt32 HeaderId;
         public UInt32 HeaderSize;

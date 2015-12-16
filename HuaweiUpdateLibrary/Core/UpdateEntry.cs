@@ -14,54 +14,6 @@ namespace HuaweiUpdateLibrary.Core
         private readonly long _dataOffset;
         private readonly ushort[] _checkSumTable;
 
-        private UpdateEntry(Stream stream, bool checksum = true)
-        {
-            var reader = new BinaryReader(stream);
-
-            // Read header
-            if (!Utilities.ByteToType(reader, out _fileHeader))
-                throw new Exception("ByteToType() failed @" + reader.BaseStream.Position);
-
-            // Check header magic
-            if (_fileHeader.HeaderId != FileMagic)
-                throw new Exception("Invalid file.");
-
-            // Validate checksum
-            if (checksum)
-            {
-                var crc = _fileHeader.HeaderChecksum;
-
-                // Reset checksum
-                _fileHeader.HeaderChecksum = 0;
-
-                byte[] byteHeader;
-
-                // Convert
-                Utilities.TypeToByte(_fileHeader, out byteHeader);
-
-                // Calculate checksum
-                _fileHeader.HeaderChecksum = BitConverter.ToUInt16(UpdateCrc.ComputeHash(byteHeader, 0, byteHeader.Length), 0);
-
-                // Verify crc
-                if (_fileHeader.HeaderChecksum != crc)
-                {
-                    throw new Exception(string.Format("Checksum error @{0:X08}: {1:X04}<>{2:X04}", stream.Position, _fileHeader.HeaderChecksum, crc));
-                }
-            }
-
-            // Calculate checksum table size
-            var checksumTableSize = _fileHeader.HeaderSize - Marshal.SizeOf(typeof(FileHeader));
-
-            // Allocate checksum table
-            _checkSumTable = new ushort[checksumTableSize / sizeof(ushort)];
-
-            // Read checksum table
-            for (var count = 0; count < _checkSumTable.Length; count++) { _checkSumTable[count] = reader.ReadUInt16(); }
-
-            // Save position of file data
-            _dataOffset = stream.Position;
-        }
-        
         /// <summary>
         /// Header Id
         /// </summary>
@@ -140,6 +92,54 @@ namespace HuaweiUpdateLibrary.Core
         public UInt16 BlockSize
         {
             get { return _fileHeader.BlockSize; }
+        }
+
+        private UpdateEntry(Stream stream, bool checksum = true)
+        {
+            var reader = new BinaryReader(stream);
+
+            // Read header
+            if (!Utilities.ByteToType(reader, out _fileHeader))
+                throw new Exception("ByteToType() failed @" + reader.BaseStream.Position);
+
+            // Check header magic
+            if (_fileHeader.HeaderId != FileMagic)
+                throw new Exception("Invalid file.");
+
+            // Validate checksum
+            if (checksum)
+            {
+                var crc = _fileHeader.HeaderChecksum;
+
+                // Reset checksum
+                _fileHeader.HeaderChecksum = 0;
+
+                byte[] byteHeader;
+
+                // Convert
+                Utilities.TypeToByte(_fileHeader, out byteHeader);
+
+                // Calculate checksum
+                _fileHeader.HeaderChecksum = BitConverter.ToUInt16(UpdateCrc.ComputeHash(byteHeader), 0);
+
+                // Verify crc
+                if (_fileHeader.HeaderChecksum != crc)
+                {
+                    throw new Exception(string.Format("Checksum error @{0:X08}: {1:X04}<>{2:X04}", stream.Position, _fileHeader.HeaderChecksum, crc));
+                }
+            }
+
+            // Calculate checksum table size
+            var checksumTableSize = _fileHeader.HeaderSize - Marshal.SizeOf(typeof(FileHeader));
+
+            // Allocate checksum table
+            _checkSumTable = new ushort[checksumTableSize / sizeof(ushort)];
+
+            // Read checksum table
+            for (var count = 0; count < _checkSumTable.Length; count++) { _checkSumTable[count] = reader.ReadUInt16(); }
+
+            // Save position of file data
+            _dataOffset = stream.Position;
         }
 
         /// <summary>
