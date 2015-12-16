@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using HuaweiUpdateLibrary.Algorithms;
 using HuaweiUpdateLibrary.Streams;
 
@@ -128,7 +127,7 @@ namespace HuaweiUpdateLibrary.Core
             }
 
             // Calculate checksum table size
-            var checksumTableSize = _fileHeader.HeaderSize - Marshal.SizeOf(typeof(FileHeader));
+            var checksumTableSize = _fileHeader.HeaderSize - FileHeader.Size;
 
             // Allocate checksum table
             _checkSumTable = new ushort[checksumTableSize / sizeof(ushort)];

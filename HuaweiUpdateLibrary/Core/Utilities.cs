@@ -1,10 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace HuaweiUpdateLibrary.Core
 {
     internal static class Utilities
     {
+        public static Int32 UintSize = Marshal.SizeOf(typeof(UInt32));
+
         public static bool ByteToType<T>(BinaryReader reader, out T result)
         {
             var objSize = Marshal.SizeOf(typeof(T));

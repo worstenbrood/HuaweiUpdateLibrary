@@ -27,5 +27,13 @@ namespace HuaweiUpdateLibrary.Core
         public UInt16 HeaderChecksum;
         public UInt16 BlockSize;
         public UInt16 Blank2;
+
+        /// <summary>
+        /// Return size of this struct
+        /// </summary>
+        public static int Size
+        {
+            get { return Marshal.SizeOf(typeof (FileHeader)); }
+        }
     }
 }

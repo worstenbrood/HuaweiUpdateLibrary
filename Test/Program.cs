@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using HuaweiUpdateLibrary.Core;
+﻿using HuaweiUpdateLibrary.Core;
 
 namespace Test
 {
@@ -10,7 +8,7 @@ namespace Test
         {
             const string file = @"C:\Temp\update.app";
             var updateFile = UpdateFile.Open(file);
-            updateFile[0].Extract(file, @"c:\temp\" + updateFile[0].FileType + ".img");
+            updateFile[0].ExtractHeader(@"c:\temp\" + updateFile[0].FileType + ".header");
         }
     }
 }

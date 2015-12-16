@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateFile : IEnumerable<UpdateEntry>
     {
         private const long SkipBytes = 92;
-        private readonly Int32 _uintSize = Marshal.SizeOf(typeof(UInt32));
-
+        
         private UpdateFile(string fileName, bool checksum = true)
         {
             // Open stream
@@ -45,8 +42,8 @@ namespace HuaweiUpdateLibrary.Core
                 stream.Seek(entry.FileSize, SeekOrigin.Current);
 
                 // Read remainder
-                var remainder = _uintSize - (int)(stream.Position % _uintSize);
-                if (remainder < _uintSize)
+                var remainder = Utilities.UintSize - (int)(stream.Position % Utilities.UintSize);
+                if (remainder < Utilities.UintSize)
                     stream.Seek(remainder, SeekOrigin.Current);
             }
         }
