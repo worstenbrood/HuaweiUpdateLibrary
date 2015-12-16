@@ -92,7 +92,7 @@ namespace HuaweiUpdateLibrary.Core
 
         private void CreateFile()
         {
-            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = new FileStream(_fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 var buffer = new byte[SkipBytes];
 
