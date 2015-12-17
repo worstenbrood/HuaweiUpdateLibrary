@@ -123,11 +123,8 @@ namespace HuaweiUpdateLibrary.Core
                 // Reset checksum
                 _fileHeader.HeaderChecksum = 0;
 
-                // Get header
-                var byteHeader = GetHeader();
-
                 // Calculate checksum
-                _fileHeader.HeaderChecksum = UpdateCrc.ComputeSum(byteHeader);
+                _fileHeader.HeaderChecksum = UpdateCrc.ComputeSum(GetHeader());
 
                 // Verify crc
                 if (_fileHeader.HeaderChecksum != crc)
