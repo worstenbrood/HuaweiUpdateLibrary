@@ -75,7 +75,7 @@ namespace HuaweiUpdateLibrary.Core
             if (index == -1) 
                 index = source.Length;
 
-            // Resturn string
+            // Return string
             return Encoding.ASCII.GetString(source, 0, index);
         }
     }

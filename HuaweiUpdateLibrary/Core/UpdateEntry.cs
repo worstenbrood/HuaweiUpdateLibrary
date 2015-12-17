@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using HuaweiUpdateLibrary.Algorithms;
 using HuaweiUpdateLibrary.Streams;
 
@@ -20,6 +19,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt32 HeaderId
         {
             get { return _fileHeader.HeaderId; }
+            private set { _fileHeader.HeaderId = value; }
         }
 
         /// <summary>
@@ -28,6 +28,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt32 HeaderSize
         {
             get { return _fileHeader.HeaderSize; }
+            private set { _fileHeader.HeaderSize = value; }
         }
 
         /// <summary>
@@ -54,6 +55,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt32 FileSize
         {
             get { return _fileHeader.FileSize; }
+            private set { _fileHeader.FileSize = value; }
         }
 
         /// <summary>
@@ -89,6 +91,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt16 HeaderChecksum
         {
             get { return _fileHeader.HeaderChecksum; }
+            private set { _fileHeader.HeaderChecksum = value; }
         }
 
         /// <summary>
@@ -97,6 +100,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt16 BlockSize
         {
             get { return _fileHeader.BlockSize; }
+            private set { _fileHeader.BlockSize = value; }
         }
 
         private UpdateEntry(Stream stream, bool checksum = true)
