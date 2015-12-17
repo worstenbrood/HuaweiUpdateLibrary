@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using HuaweiUpdateLibrary.Algorithms;
 using HuaweiUpdateLibrary.Streams;
 
@@ -12,7 +13,7 @@ namespace HuaweiUpdateLibrary.Core
         private FileHeader _fileHeader;
         private readonly long _dataOffset;
         private readonly ushort[] _checkSumTable;
-
+        
         /// <summary>
         /// Header Id
         /// </summary>
@@ -34,7 +35,8 @@ namespace HuaweiUpdateLibrary.Core
         /// </summary>
         public string HardwareId
         {
-            get { return new string(_fileHeader.HardwareId);}
+            get { return Utilities.GetString(_fileHeader.HardwareId); }
+            set { Utilities.SetCharArray(value, _fileHeader.HardwareId); }
         }
 
         /// <summary>
@@ -43,6 +45,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt32 FileSequence
         {
             get { return _fileHeader.FileSequence; }
+            set { _fileHeader.FileSequence = value; }
         }
 
         /// <summary>
@@ -58,7 +61,8 @@ namespace HuaweiUpdateLibrary.Core
         /// </summary>
         public string FileDate
         {
-            get { return _fileHeader.FileDate; }
+            get { return Utilities.GetString(_fileHeader.FileDate); }
+            set { Utilities.SetCharArray(value, _fileHeader.FileDate); }
         }
 
         /// <summary>
@@ -66,7 +70,8 @@ namespace HuaweiUpdateLibrary.Core
         /// </summary>
         public string FileTime
         {
-            get { return _fileHeader.FileTime; }
+            get { return Utilities.GetString(_fileHeader.FileTime); }
+            set { Utilities.SetCharArray(value, _fileHeader.FileTime); }
         }
 
         /// <summary>
@@ -74,7 +79,8 @@ namespace HuaweiUpdateLibrary.Core
         /// </summary>
         public string FileType
         {
-            get { return _fileHeader.FileType; }
+            get { return Utilities.GetString(_fileHeader.FileType); }
+            set { Utilities.SetCharArray(value, _fileHeader.FileType); }
         }
 
         /// <summary>

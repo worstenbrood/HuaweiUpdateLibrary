@@ -175,6 +175,11 @@ namespace HuaweiUpdateLibrary.Core
             entry.Extract(_fileName, output, checksum);
         }
 
+        /// <summary>
+        /// Add <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <param name="stream"></param>
         public void Add(UpdateEntry entry, Stream stream)
         {
             
