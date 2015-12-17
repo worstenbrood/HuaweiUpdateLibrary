@@ -127,7 +127,7 @@ namespace HuaweiUpdateLibrary.Core
                 var byteHeader = GetHeader();
 
                 // Calculate checksum
-                _fileHeader.HeaderChecksum = BitConverter.ToUInt16(UpdateCrc.ComputeHash(byteHeader), 0);
+                _fileHeader.HeaderChecksum = UpdateCrc.ComputeSum(byteHeader);
 
                 // Verify crc
                 if (_fileHeader.HeaderChecksum != crc)
@@ -211,7 +211,7 @@ namespace HuaweiUpdateLibrary.Core
                 if (checksum)
                 {
                     // Calculate block crc
-                    var crc = BitConverter.ToUInt16(UpdateCrc.ComputeHash(buffer, 0, size), 0);
+                    var crc = UpdateCrc.ComputeSum(buffer, 0, size);
 
                     // Verify
                     if (crc != _checkSumTable[blockNumber])

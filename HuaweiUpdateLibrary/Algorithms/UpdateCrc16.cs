@@ -89,6 +89,16 @@ namespace HuaweiUpdateLibrary.Algorithms
             return result;
         }
 
+        public UInt16 ComputeSum(byte[] buffer)
+        {
+            return ComputeSum(buffer, 0, buffer.Length);
+        }
+
+        public UInt16 ComputeSum(byte[] buffer, int offset, int count)
+        {
+            return BitConverter.ToUInt16(ComputeHash(buffer, offset, count), 0);
+        }
+
         public override bool CanReuseTransform
         {
             get { return true; }
