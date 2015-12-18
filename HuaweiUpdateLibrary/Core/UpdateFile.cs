@@ -79,7 +79,7 @@ namespace HuaweiUpdateLibrary.Core
                 while (stream.Position < stream.Length)
                 {
                     // Read entry
-                    var entry = UpdateEntry.Read(stream, checksum);
+                    var entry = UpdateEntry.Open(stream, checksum);
 
                     // Add to list
                     Entries.Add(entry);
