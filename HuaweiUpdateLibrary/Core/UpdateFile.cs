@@ -248,6 +248,9 @@ namespace HuaweiUpdateLibrary.Core
                     writer.Write(new byte[remainder]);
                 }
             }
+
+            // Add entry
+            Entries.Add(entry);
         }
 
         /// <summary>
