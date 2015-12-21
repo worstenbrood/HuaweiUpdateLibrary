@@ -1,16 +1,16 @@
 ﻿using System;
 using System.IO;
-using HuaweiUpdateLibrary.Algorithms;
 using HuaweiUpdateLibrary.Streams;
 
 namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateEntry
     {
-        private const UInt32 FileMagic = 0xA55AAA55;
         public const ushort DefaultBlockSize = 4096;
+        private const UInt32 FileMagic = 0xA55AAA55;
         private FileHeader _fileHeader;
        
+        // Can be set by UpdateFile
         internal long DataOffset;
         internal ushort[] CheckSumTable;
         
@@ -29,7 +29,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt32 HeaderSize
         {
             get { return _fileHeader.HeaderSize; }
-            set { _fileHeader.HeaderSize = value; }
+            internal set { _fileHeader.HeaderSize = value; }
         }
 
         /// <summary>
@@ -38,11 +38,7 @@ namespace HuaweiUpdateLibrary.Core
         public string HardwareId
         {
             get { return Utilities.GetString(_fileHeader.HardwareId); }
-            set
-            {
-                Utilities.SetCharArray(value, _fileHeader.HardwareId); 
-                ComputeHeaderChecksum();
-            }
+            set { Utilities.SetCharArray(value, _fileHeader.HardwareId); }
         }
 
         /// <summary>
