@@ -240,6 +240,9 @@ namespace HuaweiUpdateLibrary.Core
                 // Write
                 for (var count = 0; count < entry.CheckSumTable.Length; count++) writer.Write(entry.CheckSumTable[count]);
 
+                // Jump further
+                output.Seek(stream.Length, SeekOrigin.Current);
+
                 // Write remainder
                 var remainder = Utilities.UintSize - (int)(writer.BaseStream.Position % Utilities.UintSize);
                 if (remainder < Utilities.UintSize)
