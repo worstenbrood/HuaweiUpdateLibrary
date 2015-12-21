@@ -6,48 +6,43 @@ namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateFile : IEnumerable<UpdateEntry>
     {
-        private const long SkipBytes = 92;
+        private enum Mode
+        {
+            Open,
+            Create
+        }
         
-        private UpdateFile(string fileName, bool checksum = true)
+        private const long SkipBytes = 92;
+        private readonly string _fileName;
+
+        public override string ToString()
         {
-            // Open stream
-            using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            return _fileName;
+        }
+
+        private UpdateFile(string fileName, Mode mode, bool checksum = true)
+        {
+            // Store filename
+            _fileName = fileName;
+
+            switch (mode)
             {
-                // Load entries
-                LoadEntries(stream, checksum);
+                case Mode.Open:
+                {
+                    // Load entries
+                    LoadEntries(checksum);
+                    break;
+                }
+
+                case Mode.Create:
+                {
+                    // Create file
+                    CreateFile();
+                    break;
+                }
             }
         }
 
-        private UpdateFile(Stream stream, bool checksum = true)
-        {
-            // Load entries
-            LoadEntries(stream, checksum);
-        }
-
-        private void LoadEntries(Stream stream, bool checksum)
-        {
-            // Skip first 92 bytes
-            stream.Seek(SkipBytes, SeekOrigin.Begin);
-
-            // Read file
-            while (stream.Position < stream.Length)
-            {
-                // Read entry
-                var entry = UpdateEntry.Read(stream, checksum);
-
-                // Add to list
-                Entries.Add(entry);
-
-                // Skip file data
-                stream.Seek(entry.FileSize, SeekOrigin.Current);
-
-                // Read remainder
-                var remainder = Utilities.UintSize - (int)(stream.Position % Utilities.UintSize);
-                if (remainder < Utilities.UintSize)
-                    stream.Seek(remainder, SeekOrigin.Current);
-            }
-        }
-       
         private List<UpdateEntry> _entries;
 
         private List<UpdateEntry> Entries
@@ -72,7 +67,45 @@ namespace HuaweiUpdateLibrary.Core
         {
             get { return Entries.Count; }
         }
-        
+
+        private void LoadEntries(bool checksum)
+        {
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                // Skip first 92 bytes
+                stream.Seek(SkipBytes, SeekOrigin.Begin);
+
+                // Read file
+                while (stream.Position < stream.Length)
+                {
+                    // Read entry
+                    var entry = UpdateEntry.Open(stream, checksum);
+
+                    // Add to list
+                    Entries.Add(entry);
+
+                    // Skip file data
+                    stream.Seek(entry.FileSize, SeekOrigin.Current);
+
+                    // Read remainder
+                    var remainder = Utilities.UintSize - (int)(stream.Position % Utilities.UintSize);
+                    if (remainder < Utilities.UintSize)
+                        stream.Seek(remainder, SeekOrigin.Current);
+                }
+            }
+        }
+
+        private void CreateFile()
+        {
+            using (var stream = new FileStream(_fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                var buffer = new byte[SkipBytes];
+
+                // Write SkipBytes
+                stream.Write(buffer, 0, buffer.Length);
+            }
+        }
+
         /// <summary>
         /// Open an existing update file
         /// </summary>
@@ -81,18 +114,153 @@ namespace HuaweiUpdateLibrary.Core
         /// <returns><see cref="UpdateFile"/></returns>
         public static UpdateFile Open(string fileName, bool checksum = true)
         {
-            return new UpdateFile(fileName, checksum);
+            return new UpdateFile(fileName, Mode.Open, checksum);
         }
 
         /// <summary>
-        /// Open an existing update file
+        /// Create an <see cref="UpdateFile"/>
         /// </summary>
-        /// <param name="stream"><see cref="Stream"/> to read from</param>
-        /// <param name="checksum">Verify header checksum</param>
+        /// <param name="fileName">Filename</param>
         /// <returns><see cref="UpdateFile"/></returns>
-        public static UpdateFile Open(Stream stream, bool checksum = true)
+        public static UpdateFile Create(string fileName)
         {
-            return new UpdateFile(stream, checksum);
+            return new UpdateFile(fileName, Mode.Create);
+        }
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="index"><see cref="UpdateEntry"/> index</param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(int index, string output, bool checksum = true)
+        {
+            // Extract entry
+            Extract(Entries[index], output, checksum);
+        }
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(UpdateEntry entry, string output, bool checksum = true)
+        {
+            // Extract entry
+            entry.Extract(_fileName, output, checksum);
+        }
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="index"><see cref="UpdateEntry"/> index</param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(int index, Stream output, bool checksum = true)
+        {
+            // Extract entry
+            Extract(Entries[index], output, checksum);
+        }
+
+        /// <summary>
+        /// Extract <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="output">Output file</param>
+        /// <param name="checksum">Verify checksum</param>
+        public void Extract(UpdateEntry entry, Stream output, bool checksum = true)
+        {
+            // Extract entry
+            entry.Extract(_fileName, output, checksum);
+        }
+
+        /// <summary>
+        /// Add <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="stream"><see cref="Stream"/> to input data</param>
+        public void Add(UpdateEntry entry, Stream stream)
+        {
+            // Set size
+            entry.FileSize = (uint) stream.Length;
+            
+            // Calculate checksum table size
+            var checksumTableSize = entry.FileSize / entry.BlockSize;
+            if (entry.FileSize % entry.BlockSize != 0) 
+                checksumTableSize++;
+
+            // Allocate checksum table
+            entry.CheckSumTable = new ushort[checksumTableSize];
+
+            // Set headersize
+            entry.HeaderSize = (uint) (FileHeader.Size + (checksumTableSize*Utilities.UshortSize));
+
+            using (var output = new FileStream(_fileName, FileMode.Append, FileAccess.Write, FileShare.None))
+            {
+                // Compute header checksum
+                entry.ComputeHeaderChecksum();
+
+                // Get header
+                var header = entry.GetHeader();
+
+                // Write header
+                output.Write(header, 0, header.Length);
+
+                // Skip checksum table
+                output.Seek(checksumTableSize * Utilities.UshortSize, SeekOrigin.Current);
+
+                // Set offset
+                entry.DataOffset = output.Position;
+
+                // Read data
+                var buffer = new byte[entry.BlockSize];
+                var blockNumber = 0;
+                int size;
+
+                // Calculate checksum
+                while ((size = stream.Read(buffer, 0, entry.BlockSize)) > 0)
+                {
+                    // Calculate checksum
+                    entry.CheckSumTable[blockNumber] = Utilities.Crc.ComputeSum(buffer, 0, size);
+
+                    // Write data
+                    output.Write(buffer, 0, size);
+
+                    // Increase blocknumber
+                    blockNumber++;
+                }
+
+                // Jump back 
+                output.Seek(-(stream.Length + (checksumTableSize * Utilities.UshortSize)), SeekOrigin.Current);
+
+                // Write checksum table
+                var writer = new BinaryWriter(output);
+
+                // Write
+                for (var count = 0; count < entry.CheckSumTable.Length; count++) writer.Write(entry.CheckSumTable[count]);
+
+                // Write remainder
+                var remainder = Utilities.UintSize - (int)(writer.BaseStream.Position % Utilities.UintSize);
+                if (remainder < Utilities.UintSize)
+                {
+                    // Write remainder bytes
+                    writer.Write(new byte[remainder]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="fileName">File to add</param>
+        public void Add(UpdateEntry entry, string fileName)
+        {
+            using (var input = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                Add(entry, input);
+            }
         }
         
         /// <summary>

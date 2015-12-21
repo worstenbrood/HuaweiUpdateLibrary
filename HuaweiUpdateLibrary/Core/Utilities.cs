@@ -1,12 +1,16 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using HuaweiUpdateLibrary.Algorithms;
 
 namespace HuaweiUpdateLibrary.Core
 {
     internal static class Utilities
     {
-        public static readonly Int32 UintSize = Marshal.SizeOf(typeof(UInt32));
+        public const Int32 UintSize = sizeof (UInt32);
+        public const Int32 UshortSize = sizeof (ushort);
+        public static readonly UpdateCrc16 Crc = new UpdateCrc16();
 
         public static bool ByteToType<T>(BinaryReader reader, out T result)
         {
@@ -50,6 +54,31 @@ namespace HuaweiUpdateLibrary.Core
             }
 
             return true;
+        }
+
+        public static void SetCharArray(string source, byte[] destination)
+        {
+            // Reset values
+            for (var c = 0; c < destination.Length; c++) { destination[c] = 0; }
+            
+            // Calculate string length
+            var valueLength = Math.Min(source.Length, destination.Length);
+            
+            // Copy value
+            Array.Copy(Encoding.ASCII.GetBytes(source.ToCharArray(0, valueLength)), destination, valueLength);
+        }
+
+        public static string GetString(byte[] source)
+        {
+            // Find first zero
+            var index = Array.FindIndex(source, b => b == 0);
+
+            // If not found use complete length
+            if (index == -1) 
+                index = source.Length;
+
+            // Return string
+            return Encoding.ASCII.GetString(source, 0, index);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Test
         {
             const string file = @"C:\Temp\update.app";
             var updateFile = UpdateFile.Open(file);
-            updateFile[0].ExtractHeader(@"c:\temp\" + updateFile[0].FileType + ".header");
+            updateFile.Extract(0, @"c:\temp\" + updateFile[0].FileType + ".img");
         }
     }
 }
