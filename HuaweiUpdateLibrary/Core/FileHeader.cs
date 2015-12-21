@@ -31,6 +31,24 @@ namespace HuaweiUpdateLibrary.Core
         /// <summary>
         /// Return size of this struct
         /// </summary>
-        public static readonly int Size = Marshal.SizeOf(typeof (FileHeader)); 
+        public static readonly int Size = Marshal.SizeOf(typeof (FileHeader));
+
+        /// <summary>
+        /// Create intance of <see cref="FileHeader"/>
+        /// </summary>
+        /// <returns></returns>
+        public static FileHeader Create()
+        {
+            var result = new FileHeader
+            {
+                HardwareId = new byte[8],
+                FileDate = new byte[16],
+                FileTime = new byte[16],
+                FileType = new byte[16],
+                Blank1 = new byte[16]
+            };
+
+            return result;
+        }
     }
 }

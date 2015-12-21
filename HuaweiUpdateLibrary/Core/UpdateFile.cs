@@ -178,11 +178,89 @@ namespace HuaweiUpdateLibrary.Core
         /// <summary>
         /// Add <see cref="UpdateEntry"/>
         /// </summary>
-        /// <param name="entry"></param>
-        /// <param name="stream"></param>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="stream"><see cref="Stream"/> to input data</param>
         public void Add(UpdateEntry entry, Stream stream)
         {
+            // Set size
+            entry.FileSize = (uint) stream.Length;
             
+            // Calculate checksum table size
+            var checksumTableSize = entry.FileSize / entry.BlockSize;
+            if (entry.FileSize % entry.BlockSize != 0) 
+                checksumTableSize++;
+
+            // Allocate checksum table
+            entry.CheckSumTable = new ushort[checksumTableSize];
+
+            // Set headersize
+            entry.HeaderSize = (uint) (FileHeader.Size + (checksumTableSize*Utilities.UshortSize));
+
+            using (var output = new FileStream(_fileName, FileMode.Append, FileAccess.Write, FileShare.None))
+            {
+                // Compute header checksum
+                entry.ComputeHeaderChecksum();
+
+                // Get header
+                var header = entry.GetHeader();
+
+                // Write header
+                output.Write(header, 0, header.Length);
+
+                // Skip checksum table
+                output.Seek(checksumTableSize * Utilities.UshortSize, SeekOrigin.Current);
+
+                // Set offset
+                entry.DataOffset = output.Position;
+
+                // Read data
+                var buffer = new byte[entry.BlockSize];
+                var blockNumber = 0;
+                int size;
+
+                // Calculate checksum
+                while ((size = stream.Read(buffer, 0, entry.BlockSize)) > 0)
+                {
+                    // Calculate checksum
+                    entry.CheckSumTable[blockNumber] = Utilities.Crc.ComputeSum(buffer, 0, size);
+
+                    // Write data
+                    output.Write(buffer, 0, size);
+
+                    // Increase blocknumber
+                    blockNumber++;
+                }
+
+                // Jump back 
+                output.Seek(-(stream.Length + (checksumTableSize * Utilities.UshortSize)), SeekOrigin.Current);
+
+                // Write checksum table
+                var writer = new BinaryWriter(output);
+
+                // Write
+                for (var count = 0; count < entry.CheckSumTable.Length; count++) writer.Write(entry.CheckSumTable[count]);
+
+                // Write remainder
+                var remainder = Utilities.UintSize - (int)(writer.BaseStream.Position % Utilities.UintSize);
+                if (remainder < Utilities.UintSize)
+                {
+                    // Write remainder bytes
+                    writer.Write(new byte[remainder]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="fileName">File to add</param>
+        public void Add(UpdateEntry entry, string fileName)
+        {
+            using (var input = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                Add(entry, input);
+            }
         }
         
         /// <summary>

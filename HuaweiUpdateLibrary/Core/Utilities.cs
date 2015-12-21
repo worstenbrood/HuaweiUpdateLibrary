@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using HuaweiUpdateLibrary.Algorithms;
 
 namespace HuaweiUpdateLibrary.Core
 {
@@ -9,6 +10,7 @@ namespace HuaweiUpdateLibrary.Core
     {
         public const Int32 UintSize = sizeof (UInt32);
         public const Int32 UshortSize = sizeof (ushort);
+        public static readonly UpdateCrc16 Crc = new UpdateCrc16();
 
         public static bool ByteToType<T>(BinaryReader reader, out T result)
         {

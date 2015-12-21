@@ -7,18 +7,12 @@ namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateEntry
     {
-        internal enum Mode
-        {
-            Open,
-            Create
-        }
-
-        private static readonly UpdateCrc16 UpdateCrc = new UpdateCrc16();
         private const UInt32 FileMagic = 0xA55AAA55;
         public const ushort DefaultBlockSize = 4096;
         private FileHeader _fileHeader;
-        private long _dataOffset;
-        private ushort[] _checkSumTable;
+       
+        internal long DataOffset;
+        internal ushort[] CheckSumTable;
         
         /// <summary>
         /// Header Id
@@ -35,7 +29,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt32 HeaderSize
         {
             get { return _fileHeader.HeaderSize; }
-            private set { _fileHeader.HeaderSize = value; }
+            set { _fileHeader.HeaderSize = value; }
         }
 
         /// <summary>
@@ -66,7 +60,7 @@ namespace HuaweiUpdateLibrary.Core
         public UInt32 FileSize
         {
             get { return _fileHeader.FileSize; }
-            private set { _fileHeader.FileSize = value; }
+            internal set { _fileHeader.FileSize = value; }
         }
 
         /// <summary>
@@ -114,15 +108,6 @@ namespace HuaweiUpdateLibrary.Core
             private set { _fileHeader.BlockSize = value; }
         }
 
-        public void ComputeHeaderChecksum()
-        {
-            // Reset checksum
-            HeaderChecksum = 0;
-
-            // Calculate checksum
-            HeaderChecksum = UpdateCrc.ComputeSum(GetHeader());
-        }
-
         private void OpenEntry(Stream stream, bool checksum)
         {
             var reader = new BinaryReader(stream);
@@ -155,13 +140,13 @@ namespace HuaweiUpdateLibrary.Core
             var checksumTableSize = HeaderSize - FileHeader.Size;
 
             // Allocate checksum table
-            _checkSumTable = new ushort[checksumTableSize / Utilities.UshortSize];
+            CheckSumTable = new ushort[checksumTableSize / Utilities.UshortSize];
 
             // Read checksum table
-            for (var count = 0; count < _checkSumTable.Length; count++) { _checkSumTable[count] = reader.ReadUInt16(); }
+            for (var count = 0; count < CheckSumTable.Length; count++) { CheckSumTable[count] = reader.ReadUInt16(); }
 
             // Save position of file data
-            _dataOffset = stream.Position;
+            DataOffset = stream.Position;
         }
 
         private UpdateEntry(Stream stream, bool checksum)
@@ -169,14 +154,10 @@ namespace HuaweiUpdateLibrary.Core
             OpenEntry(stream, checksum);
         }
 
-        private void CreateEntry(Stream stream, ushort blockSize)
+        private void CreateEntry(ushort blockSize)
         {
             // Set FileHeader
-            _fileHeader.HardwareId = new byte[8];
-            _fileHeader.FileDate = new byte[16];
-            _fileHeader.FileTime = new byte[16];
-            _fileHeader.FileType = new byte[16];
-            _fileHeader.Blank1 = new byte[16];
+            _fileHeader = FileHeader.Create();
 
             var now = DateTime.Now;
 
@@ -187,45 +168,13 @@ namespace HuaweiUpdateLibrary.Core
             // Set id
             HeaderId = FileMagic;
             
-            // File size
-            FileSize = (uint) stream.Length;
-
             // Block size
             BlockSize = blockSize;
-
-            // Calculate checksum table size
-            var checksumTableSize = FileSize / BlockSize;
-            if (FileSize%BlockSize != 0) 
-                checksumTableSize++;
-
-            // Allocate checksum table
-            _checkSumTable = new ushort[checksumTableSize];
-
-            // Read data
-            var buffer = new byte[BlockSize];
-            var blockNumber = 0;
-            int size;
-
-            // Calculate checksum
-            while ((size = stream.Read(buffer, 0, BlockSize)) > 0)
-            {
-                // Calculate checksum
-                _checkSumTable[blockNumber] = UpdateCrc.ComputeSum(buffer, 0, size);
-
-                // Increase blocknumber
-                blockNumber++;
-            }
-
-            // Set header size
-            HeaderSize = (uint)(FileHeader.Size + (checksumTableSize * Utilities.UshortSize));
-
-            // Calculate checksum
-            ComputeHeaderChecksum();
         }
         
-        private UpdateEntry(Stream stream, ushort blockSize)
+        private UpdateEntry(ushort blockSize)
         {
-            CreateEntry(stream, blockSize);
+            CreateEntry(blockSize);
         }
 
         /// <summary>
@@ -239,9 +188,9 @@ namespace HuaweiUpdateLibrary.Core
             return new UpdateEntry(stream, checksum);
         }
 
-        public static UpdateEntry Create(Stream stream, ushort blockSize = DefaultBlockSize)
+        public static UpdateEntry Create(ushort blockSize = DefaultBlockSize)
         {
-            return new UpdateEntry(stream, blockSize);
+            return new UpdateEntry(blockSize);
         }
 
         /// <summary>
@@ -252,7 +201,7 @@ namespace HuaweiUpdateLibrary.Core
         public Stream GetDataStream(Stream stream)
         {
             // Seek to offset
-            stream.Seek(_dataOffset, SeekOrigin.Begin);
+            stream.Seek(DataOffset, SeekOrigin.Begin);
 
             // Return stream
             return new PartialStream(stream, FileSize);
@@ -268,12 +217,12 @@ namespace HuaweiUpdateLibrary.Core
             var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             // Seek to offset
-            stream.Seek(_dataOffset, SeekOrigin.Begin);
+            stream.Seek(DataOffset, SeekOrigin.Begin);
 
             // Return stream
             return new PartialStream(stream, FileSize);
         }
-
+        
         /// <summary>
         /// Extract the current <see cref="UpdateEntry"/> from an input <see cref="Stream"/> to an output <see cref="Stream"/>
         /// </summary>
@@ -295,13 +244,13 @@ namespace HuaweiUpdateLibrary.Core
                 if (checksum)
                 {
                     // Calculate block crc
-                    var crc = UpdateCrc.ComputeSum(buffer, 0, size);
+                    var crc = Utilities.Crc.ComputeSum(buffer, 0, size);
 
                     // Verify
-                    if (crc != _checkSumTable[blockNumber])
+                    if (crc != CheckSumTable[blockNumber])
                     {
                         throw new Exception(string.Format("Checksum error in block {0}@{1:X08}: {2:X04}<>{3:X04}", blockNumber, (reader.Position - size),
-                            _checkSumTable[blockNumber], crc));
+                            CheckSumTable[blockNumber], crc));
                     }
                 }
 
@@ -365,7 +314,7 @@ namespace HuaweiUpdateLibrary.Core
         /// Get the FileHeader converted to a byte array
         /// </summary>
         /// <returns>Byte array</returns>
-        public byte[] GetHeader()
+        internal byte[] GetHeader()
         {
             byte[] result;
 
@@ -375,6 +324,15 @@ namespace HuaweiUpdateLibrary.Core
             return result;
         }
 
+        internal void ComputeHeaderChecksum()
+        {
+            // Reset checksum
+            HeaderChecksum = 0;
+
+            // Calculate checksum
+            HeaderChecksum = Utilities.Crc.ComputeSum(GetHeader());
+        }
+        
         /// <summary>
         /// Write FileHeader to a stream
         /// </summary>
