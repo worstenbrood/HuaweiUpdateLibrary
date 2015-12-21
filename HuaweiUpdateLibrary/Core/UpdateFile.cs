@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -268,7 +269,26 @@ namespace HuaweiUpdateLibrary.Core
                 Add(entry, input);
             }
         }
-        
+
+        /// <summary>
+        /// Remove <see cref="UpdateEntry"/> from <see cref="UpdateFile"/>
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        public void Remove(UpdateEntry entry)
+        {
+            var size = entry.FileSize + entry.HeaderSize;
+            var offset = entry.DataOffset - entry.HeaderSize;
+        }
+
+        /// <summary>
+        /// Remove <see cref="UpdateEntry"/> at index
+        /// </summary>
+        /// <param name="index"><see cref="UpdateEntry"/> index</param>
+        public void Remove(int index)
+        {
+            Remove(Entries[index]);
+        }
+
         /// <summary>
         /// Returns enumerator
         /// </summary>
