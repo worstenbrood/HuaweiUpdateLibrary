@@ -1,6 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using HuaweiUpdateLibrary.Streams;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Security;
 
 namespace HuaweiUpdateLibrary.Core
 {
@@ -278,7 +284,42 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="blockSize">Block size</param>
         public void AddChecksum(UpdateEntry entry, int blockSize = CrcBlockSize)
         {
+            // TODO: Remove already existing ?
+
+            // Set entry type
             entry.Type = EntryType.Checksum;
+
+            // Result checksum list
+            var result = new List<ushort>();
+
+            // Allocate buffer
+            var buffer = new byte[CrcBlockSize];
+
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                // Skip checksum and Signature
+                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Checksum))
+                {
+                    // Seek to filedata
+                    stream.Seek(item.DataOffset, SeekOrigin.Begin);
+
+                    var partial = new PartialStream(stream, item.FileSize);
+                    int size;
+
+                    // Process data
+                    while ((size = partial.Read(buffer, 0, CrcBlockSize)) > 0)
+                    {
+                        // Compute crc
+                        result.Add(Utilities.Crc.ComputeSum(buffer, 0, size));
+                    }
+                }
+            }
+
+            // Add entry
+            using (var stream = new MemoryStream(result.SelectMany(BitConverter.GetBytes).ToArray()))
+            {
+                Add(entry, stream);
+            }
         }
 
         /// <summary>
@@ -286,9 +327,52 @@ namespace HuaweiUpdateLibrary.Core
         /// </summary>
         /// <param name="entry"><see cref="UpdateEntry"/></param>
         /// <param name="algorithm">Algorithm to use</param>
-        public void AddSignature(UpdateEntry entry, string algorithm)
+        /// <param name="keyfile">Key file</param>
+        public void AddSignature(UpdateEntry entry, string algorithm, string keyfile)
         {
+            // TODO: Remove already existing ?
+
+            // Set entry type
             entry.Type = EntryType.Signature;
+
+            // Get signer
+            var signer = SignerUtilities.GetSigner(algorithm);
+
+            // Load key
+            using (var reader = new StreamReader(keyfile))
+            {
+                var pemReader = new PemReader(reader);
+                var key = (AsymmetricCipherKeyPair)pemReader.ReadObject();
+                signer.Init(true, key.Private);
+            }
+
+            // Allocate buffer
+            var buffer = new byte[CrcBlockSize];
+
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                // Skip checksum and Signature
+                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Checksum))
+                {
+                    // Seek to filedata
+                    stream.Seek(item.DataOffset, SeekOrigin.Begin);
+
+                    var partial = new PartialStream(stream, item.FileSize);
+                    int size;
+
+                    // Process data
+                    while ((size = partial.Read(buffer, 0, CrcBlockSize)) > 0)
+                    {
+                        signer.BlockUpdate(buffer, 0, size);
+                    }
+                }
+            }
+
+            // Add entry
+            using (var stream = new MemoryStream(signer.GenerateSignature()))
+            {
+                Add(entry, stream);
+            }
         }
 
         /// <summary>
