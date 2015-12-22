@@ -298,7 +298,7 @@ namespace HuaweiUpdateLibrary.Core
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 // Skip checksum and Signature
-                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Checksum))
+                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
                 {
                     // Seek to filedata
                     stream.Seek(item.DataOffset, SeekOrigin.Begin);
@@ -352,7 +352,8 @@ namespace HuaweiUpdateLibrary.Core
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 // Skip checksum and Signature
-                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Checksum))
+                // TODO: this is just an assumption, maybe we do need to sign the headers/checksumtables and crc entry
+                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
                 {
                     // Seek to filedata
                     stream.Seek(item.DataOffset, SeekOrigin.Begin);
