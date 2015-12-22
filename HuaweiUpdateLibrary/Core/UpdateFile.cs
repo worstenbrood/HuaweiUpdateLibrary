@@ -277,6 +277,32 @@ namespace HuaweiUpdateLibrary.Core
             }
         }
 
+        private void ProcessData(int blockSize, Action<byte[], int> action)
+        {
+            // Allocate buffer
+            var buffer = new byte[blockSize];
+
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                // Skip checksum and Signature
+                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
+                {
+                    // Seek to filedata
+                    stream.Seek(item.DataOffset, SeekOrigin.Begin);
+
+                    var partial = new PartialStream(stream, item.FileSize);
+                    int size;
+
+                    // Process data
+                    while ((size = partial.Read(buffer, 0, blockSize)) > 0)
+                    {
+                        // Execute action
+                        action(buffer, size);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Add checkum <see cref="UpdateEntry"/> (CRC)
         /// </summary>
@@ -292,28 +318,8 @@ namespace HuaweiUpdateLibrary.Core
             // Result checksum list
             var result = new List<ushort>();
 
-            // Allocate buffer
-            var buffer = new byte[CrcBlockSize];
-
-            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                // Skip checksum and Signature
-                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
-                {
-                    // Seek to filedata
-                    stream.Seek(item.DataOffset, SeekOrigin.Begin);
-
-                    var partial = new PartialStream(stream, item.FileSize);
-                    int size;
-
-                    // Process data
-                    while ((size = partial.Read(buffer, 0, CrcBlockSize)) > 0)
-                    {
-                        // Compute crc
-                        result.Add(Utilities.Crc.ComputeSum(buffer, 0, size));
-                    }
-                }
-            }
+            // Process data
+            ProcessData(CrcBlockSize, (bytes, i) => result.Add(Utilities.Crc.ComputeSum(bytes, 0, i)));
 
             // Add entry
             using (var stream = new MemoryStream(result.SelectMany(BitConverter.GetBytes).ToArray()))
@@ -346,29 +352,9 @@ namespace HuaweiUpdateLibrary.Core
                 signer.Init(true, key.Private);
             }
 
-            // Allocate buffer
-            var buffer = new byte[CrcBlockSize];
-
-            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                // Skip checksum and Signature
-                // TODO: this is just an assumption, maybe we do need to sign the headers/checksumtables and crc entry
-                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
-                {
-                    // Seek to filedata
-                    stream.Seek(item.DataOffset, SeekOrigin.Begin);
-
-                    var partial = new PartialStream(stream, item.FileSize);
-                    int size;
-
-                    // Process data
-                    while ((size = partial.Read(buffer, 0, CrcBlockSize)) > 0)
-                    {
-                        signer.BlockUpdate(buffer, 0, size);
-                    }
-                }
-            }
-
+            // TODO: this is just an assumption, maybe we do need to sign the headers/checksumtables and crc entry
+            ProcessData(CrcBlockSize, (bytes, i) => signer.BlockUpdate(bytes, 0, i));
+            
             // Add entry
             using (var stream = new MemoryStream(signer.GenerateSignature()))
             {
