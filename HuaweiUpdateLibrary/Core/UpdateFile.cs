@@ -277,6 +277,7 @@ namespace HuaweiUpdateLibrary.Core
             }
         }
 
+        // We don't have this in .Net 2.0
         private delegate void Action<in T, in TU>(T t, TU tu);
         
         private void ProcessData(int blockSize, EntryType entryType, Action<byte[], int> action)
@@ -287,7 +288,7 @@ namespace HuaweiUpdateLibrary.Core
             // Open stream
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                // Skip checksum and Signature
+                // Only entries of supplied entry type
                 foreach (var entry in Entries.FindAll(e => (entryType & e.Type) == e.Type))
                 {
                     // Seek to filedata
@@ -321,7 +322,8 @@ namespace HuaweiUpdateLibrary.Core
             // Result checksum list
             var result = new List<byte>();
 
-            // Process data
+            // Process data, this is NOT an assumption, i managed to generate the same crc as in official updates, so it only 
+            // checksums file data (not headers/checksum tables), excluding signature and crc file data
             ProcessData(blockSize, EntryType.Normal, (bytes, i) => result.AddRange(Utilities.Crc.ComputeHash(bytes, 0, i)));
 
             // Add entry
@@ -357,6 +359,7 @@ namespace HuaweiUpdateLibrary.Core
             }
 
             // TODO: this is just an assumption, maybe we do need to sign the headers/checksumtables and crc entry
+            // For now just act the same as the checksum
             ProcessData(blockSize, EntryType.Normal, (bytes, i) => signer.BlockUpdate(bytes, 0, i));
             
             // Add entry
