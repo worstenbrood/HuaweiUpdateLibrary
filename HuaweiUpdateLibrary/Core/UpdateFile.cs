@@ -1,4 +1,18 @@
-﻿using System.Collections;
+﻿/*
+ *  Copyright 2015 worstenbrood
+ *  
+ *  This file is part of HuaweiUpdateLibrary.
+ *  
+ *  HuaweiUpdateLibrary is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ *  
+ *  HuaweiUpdateLibrary is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *  You should have received a copy of the GNU General Public License along with HuaweiUpdateLibrary. 
+ *  If not, see http://www.gnu.org/licenses/.
+ */
+
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using HuaweiUpdateLibrary.Streams;
@@ -10,14 +24,14 @@ namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateFile : IEnumerable<UpdateEntry>
     {
-        public const int CrcBlockSize = 32768; 
+        public const int CrcBlockSize = 32768;
 
         private enum Mode
         {
             Open,
             Create
         }
-        
+
         private const long SkipBytes = 92;
         private readonly string _fileName;
 
@@ -94,7 +108,7 @@ namespace HuaweiUpdateLibrary.Core
                     stream.Seek(entry.FileSize, SeekOrigin.Current);
 
                     // Read remainder
-                    var remainder = Utilities.UintSize - (int)(stream.Position % Utilities.UintSize);
+                    var remainder = Utilities.UintSize - (int) (stream.Position%Utilities.UintSize);
                     if (remainder < Utilities.UintSize)
                         stream.Seek(remainder, SeekOrigin.Current);
                 }
@@ -192,10 +206,10 @@ namespace HuaweiUpdateLibrary.Core
 
             // Set size
             entry.FileSize = (uint) stream.Length;
-            
+
             // Calculate checksum table size
-            var checksumTableSize = entry.FileSize / entry.BlockSize;
-            if (entry.FileSize % entry.BlockSize != 0) 
+            var checksumTableSize = entry.FileSize/entry.BlockSize;
+            if (entry.FileSize%entry.BlockSize != 0)
                 checksumTableSize++;
 
             // Allocate checksum table
@@ -216,7 +230,7 @@ namespace HuaweiUpdateLibrary.Core
                 output.Write(header, 0, header.Length);
 
                 // Skip checksum table
-                output.Seek(checksumTableSize * Utilities.UshortSize, SeekOrigin.Current);
+                output.Seek(checksumTableSize*Utilities.UshortSize, SeekOrigin.Current);
 
                 // Set offset
                 entry.DataOffset = output.Position;
@@ -240,19 +254,20 @@ namespace HuaweiUpdateLibrary.Core
                 }
 
                 // Jump back 
-                output.Seek(-(stream.Length + (checksumTableSize * Utilities.UshortSize)), SeekOrigin.Current);
+                output.Seek(-(stream.Length + (checksumTableSize*Utilities.UshortSize)), SeekOrigin.Current);
 
                 // Write checksum table
                 var writer = new BinaryWriter(output);
 
                 // Write
-                for (var count = 0; count < entry.CheckSumTable.Length; count++) writer.Write(entry.CheckSumTable[count]);
+                for (var count = 0; count < entry.CheckSumTable.Length; count++)
+                    writer.Write(entry.CheckSumTable[count]);
 
                 // Jump further
                 output.Seek(stream.Length, SeekOrigin.Current);
 
                 // Write remainder
-                var remainder = Utilities.UintSize - (int)(writer.BaseStream.Position % Utilities.UintSize);
+                var remainder = Utilities.UintSize - (int) (writer.BaseStream.Position%Utilities.UintSize);
                 if (remainder < Utilities.UintSize)
                 {
                     // Write remainder bytes
@@ -279,7 +294,7 @@ namespace HuaweiUpdateLibrary.Core
 
         // We don't have this in .Net 2.0
         private delegate void Action<in T, in TU>(T t, TU tu);
-        
+
         private void ProcessData(int blockSize, EntryType entryType, Action<byte[], int> action)
         {
             // Allocate buffer
@@ -324,7 +339,8 @@ namespace HuaweiUpdateLibrary.Core
 
             // Process data, this is NOT an assumption, i managed to generate the same crc as in official updates, so it only 
             // checksums file data (not headers/checksum tables), excluding signature and crc file data
-            ProcessData(blockSize, EntryType.Normal, (bytes, i) => result.AddRange(Utilities.Crc.ComputeHash(bytes, 0, i)));
+            ProcessData(blockSize, EntryType.Normal,
+                (bytes, i) => result.AddRange(Utilities.Crc.ComputeHash(bytes, 0, i)));
 
             // Add entry
             using (var stream = new MemoryStream(result.ToArray()))
@@ -354,14 +370,14 @@ namespace HuaweiUpdateLibrary.Core
             using (var reader = new StreamReader(keyfile))
             {
                 var pemReader = new PemReader(reader);
-                var key = (AsymmetricCipherKeyPair)pemReader.ReadObject();
+                var key = (AsymmetricCipherKeyPair) pemReader.ReadObject();
                 signer.Init(true, key.Private);
             }
 
             // TODO: this is just an assumption, maybe we do need to sign the headers/checksumtables and crc entry
             // For now just act the same as the checksum
             ProcessData(blockSize, EntryType.Normal, (bytes, i) => signer.BlockUpdate(bytes, 0, i));
-            
+
             // Add entry
             using (var stream = new MemoryStream(signer.GenerateSignature()))
             {
@@ -379,8 +395,6 @@ namespace HuaweiUpdateLibrary.Core
             var offset = entry.DataOffset - entry.HeaderSize;
 
 
-
-            
             // Remove entry
             Entries.Remove(entry);
         }
