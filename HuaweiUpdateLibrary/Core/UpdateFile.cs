@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -7,6 +6,8 @@ namespace HuaweiUpdateLibrary.Core
 {
     public class UpdateFile : IEnumerable<UpdateEntry>
     {
+        public const int CrcBlockSize = 32768; 
+
         private enum Mode
         {
             Open,
@@ -271,6 +272,24 @@ namespace HuaweiUpdateLibrary.Core
         }
 
         /// <summary>
+        /// Add checkum <see cref="UpdateEntry"/> (CRC)
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="blockSize">Block size</param>
+        public void AddChecksum(UpdateEntry entry, int blockSize = CrcBlockSize)
+        {
+        }
+
+        /// <summary>
+        /// Add signature <see cref="UpdateEntry"/> (MD5RSA)
+        /// </summary>
+        /// <param name="entry"><see cref="UpdateEntry"/></param>
+        /// <param name="algorithm">Algorithm to use</param>
+        public void AddSignature(UpdateEntry entry, string algorithm)
+        {
+        }
+
+        /// <summary>
         /// Remove <see cref="UpdateEntry"/> from <see cref="UpdateFile"/>
         /// </summary>
         /// <param name="entry"><see cref="UpdateEntry"/></param>
@@ -278,9 +297,7 @@ namespace HuaweiUpdateLibrary.Core
         {
             var size = entry.FileSize + entry.HeaderSize;
             var offset = entry.DataOffset - entry.HeaderSize;
-
-
-
+            
             // Remove entry
             Entries.Remove(entry);
         }

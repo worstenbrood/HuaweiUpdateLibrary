@@ -32,13 +32,12 @@ namespace Test
 
         static void Main(string[] args)
         {
-            const string file = @"C:\Temp\update.app";
             var u = UpdateFile.Create(@"c:\temp\test.app");
-            using (var stream = File.OpenRead(@"c:\temp\v1.14.zip"))
-            {
-                var e = UpdateEntry.Create();
-                u.Add(e, stream);
-            }
+            var e = UpdateEntry.Create();
+            e.FileSequence = 0xFF000000;
+            e.HardwareId = "HW8x50";
+            e.FileType = "IMAGE";
+            u.Add(e, @"c:\temp\v1.14.zip");
             var v = UpdateFile.Open(@"c:\temp\test.app");
             v.Extract(v[0], "c:\\temp\\test.zip");
         }
