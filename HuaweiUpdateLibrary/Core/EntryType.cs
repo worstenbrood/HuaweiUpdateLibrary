@@ -1,8 +1,12 @@
-﻿namespace HuaweiUpdateLibrary.Core
+﻿using System;
+
+namespace HuaweiUpdateLibrary.Core
 {
+    [Flags] 
     internal enum EntryType
     {
         Checksum,
-        Signature
+        Signature,
+        Normal
     }
 }

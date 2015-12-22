@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using HuaweiUpdateLibrary.Streams;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.OpenSsl;
@@ -190,6 +188,8 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="stream"><see cref="Stream"/> to input data</param>
         public void Add(UpdateEntry entry, Stream stream)
         {
+            entry.Type = EntryType.Normal;
+
             // Set size
             entry.FileSize = (uint) stream.Length;
             
@@ -277,7 +277,9 @@ namespace HuaweiUpdateLibrary.Core
             }
         }
 
-        private void ProcessData(int blockSize, Action<byte[], int> action)
+        private delegate void Action<in T, in TU>(T t, TU tu);
+        
+        private void ProcessData(int blockSize, EntryType entryType, Action<byte[], int> action)
         {
             // Allocate buffer
             var buffer = new byte[blockSize];
@@ -286,7 +288,7 @@ namespace HuaweiUpdateLibrary.Core
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 // Skip checksum and Signature
-                foreach (var entry in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
+                foreach (var entry in Entries.FindAll(e => (entryType & e.Type) == e.Type))
                 {
                     // Seek to filedata
                     stream.Seek(entry.DataOffset, SeekOrigin.Begin);
@@ -317,13 +319,13 @@ namespace HuaweiUpdateLibrary.Core
             entry.Type = EntryType.Checksum;
 
             // Result checksum list
-            var result = new List<ushort>();
+            var result = new List<byte>();
 
             // Process data
-            ProcessData(CrcBlockSize, (bytes, i) => result.Add(Utilities.Crc.ComputeSum(bytes, 0, i)));
+            ProcessData(blockSize, EntryType.Normal, (bytes, i) => result.AddRange(Utilities.Crc.ComputeHash(bytes, 0, i)));
 
             // Add entry
-            using (var stream = new MemoryStream(result.SelectMany(BitConverter.GetBytes).ToArray()))
+            using (var stream = new MemoryStream(result.ToArray()))
             {
                 Add(entry, stream);
             }
@@ -335,7 +337,8 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="entry"><see cref="UpdateEntry"/></param>
         /// <param name="algorithm">Algorithm to use</param>
         /// <param name="keyfile">Key file</param>
-        public void AddSignature(UpdateEntry entry, string algorithm, string keyfile)
+        /// <param name="blockSize">Block size</param>
+        public void AddSignature(UpdateEntry entry, string algorithm, string keyfile, int blockSize = CrcBlockSize)
         {
             // TODO: Remove already existing ?
 
@@ -354,7 +357,7 @@ namespace HuaweiUpdateLibrary.Core
             }
 
             // TODO: this is just an assumption, maybe we do need to sign the headers/checksumtables and crc entry
-            ProcessData(CrcBlockSize, (bytes, i) => signer.BlockUpdate(bytes, 0, i));
+            ProcessData(blockSize, EntryType.Normal, (bytes, i) => signer.BlockUpdate(bytes, 0, i));
             
             // Add entry
             using (var stream = new MemoryStream(signer.GenerateSignature()))

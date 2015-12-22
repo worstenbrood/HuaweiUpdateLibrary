@@ -1,7 +1,5 @@
 ﻿using System;
-using System.IO;
 using System.Text;
-using System.Xml.Serialization;
 using HuaweiUpdateLibrary.Algorithms;
 using HuaweiUpdateLibrary.Core;
 
@@ -14,7 +12,7 @@ namespace Test
             var crc = new UpdateCrc16();
 
             var stest = "test";
-            var sum1 = BitConverter.ToUInt16(crc.ComputeHash(Encoding.ASCII.GetBytes(stest)), 0);
+            var sum1 = crc.ComputeSum(Encoding.ASCII.GetBytes(stest));
 
             var btest1 = Encoding.ASCII.GetBytes("te");
             var btest2 = Encoding.ASCII.GetBytes("st");
@@ -39,8 +37,12 @@ namespace Test
             e.HardwareId = "HW8x50";
             e.FileType = "IMAGE";
             u.Add(e, @"c:\temp\v1.14.zip");
-            var v = UpdateFile.Open(@"c:\temp\test.app");
-            v.Extract(v[0], "c:\\temp\\test.zip");
+            var crc = UpdateEntry.Create();
+            crc.FileSequence = 0xFFFFFFFF;
+            crc.FileType = "CRC";
+            crc.HardwareId = "HUAWEI";
+            u.AddChecksum(crc);
+
         }
     }
 }
