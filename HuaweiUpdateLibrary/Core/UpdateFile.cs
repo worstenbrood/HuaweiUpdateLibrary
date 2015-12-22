@@ -285,12 +285,12 @@ namespace HuaweiUpdateLibrary.Core
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 // Skip checksum and Signature
-                foreach (var item in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
+                foreach (var entry in Entries.Where(e => e.Type != EntryType.Checksum && e.Type != EntryType.Signature))
                 {
                     // Seek to filedata
-                    stream.Seek(item.DataOffset, SeekOrigin.Begin);
+                    stream.Seek(entry.DataOffset, SeekOrigin.Begin);
 
-                    var partial = new PartialStream(stream, item.FileSize);
+                    var partial = new PartialStream(stream, entry.FileSize);
                     int size;
 
                     // Process data
