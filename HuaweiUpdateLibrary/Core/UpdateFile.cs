@@ -340,8 +340,7 @@ namespace HuaweiUpdateLibrary.Core
 
             // Process data, this is NOT an assumption, i managed to generate the same crc as in official updates, so it only 
             // checksums file data (not headers/checksum tables), excluding signature and crc file data
-            ProcessData(blockSize, EntryType.Normal,
-                (bytes, i) => result.AddRange(Utilities.Crc.ComputeHash(bytes, 0, i)));
+            ProcessData(blockSize, EntryType.Normal, (bytes, i) => result.AddRange(Utilities.Crc.ComputeHash(bytes, 0, i)));
 
             // Add entry
             using (var stream = new MemoryStream(result.ToArray()))
@@ -394,8 +393,7 @@ namespace HuaweiUpdateLibrary.Core
         {
             var size = entry.HeaderSize + entry.FileSize;
             var offset = entry.DataOffset - entry.HeaderSize;
-
-
+            
             // Remove entry
             Entries.Remove(entry);
         }
