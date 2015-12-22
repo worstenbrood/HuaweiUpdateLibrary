@@ -282,6 +282,7 @@ namespace HuaweiUpdateLibrary.Core
             // Allocate buffer
             var buffer = new byte[blockSize];
 
+            // Open stream
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 // Skip checksum and Signature
