@@ -4,12 +4,6 @@ using HuaweiUpdateLibrary.Streams;
 
 namespace HuaweiUpdateLibrary.Core
 {
-    internal enum EntryType
-    {
-        Checksum,
-        Signature
-    }
-
     public class UpdateEntry
     {
         public const ushort DefaultBlockSize = 4096;

@@ -297,8 +297,11 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="entry"><see cref="UpdateEntry"/></param>
         public void Remove(UpdateEntry entry)
         {
-            var size = entry.FileSize + entry.HeaderSize;
+            var size = entry.HeaderSize + entry.FileSize;
             var offset = entry.DataOffset - entry.HeaderSize;
+
+
+
             
             // Remove entry
             Entries.Remove(entry);

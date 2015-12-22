@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Xml.Serialization;
 using HuaweiUpdateLibrary.Algorithms;
 using HuaweiUpdateLibrary.Core;
 

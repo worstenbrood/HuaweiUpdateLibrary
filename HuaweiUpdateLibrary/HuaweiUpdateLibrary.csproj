@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Algorithms\UpdateCrc16.cs" />
+    <Compile Include="Core\EntryType.cs" />
     <Compile Include="Core\FileHeader.cs" />
     <Compile Include="Core\UpdateEntry.cs" />
     <Compile Include="Core\UpdateFile.cs" />
