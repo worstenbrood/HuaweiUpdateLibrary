@@ -4,15 +4,22 @@ using HuaweiUpdateLibrary.Streams;
 
 namespace HuaweiUpdateLibrary.Core
 {
+    internal enum EntryType
+    {
+        Checksum,
+        Signature
+    }
+
     public class UpdateEntry
     {
         public const ushort DefaultBlockSize = 4096;
         private const UInt32 FileMagic = 0xA55AAA55;
         private FileHeader _fileHeader;
-       
+        
         // Can be set by UpdateFile
         internal long DataOffset;
         internal ushort[] CheckSumTable;
+        internal EntryType Type;
         
         /// <summary>
         /// Header Id

@@ -278,6 +278,7 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="blockSize">Block size</param>
         public void AddChecksum(UpdateEntry entry, int blockSize = CrcBlockSize)
         {
+            entry.Type = EntryType.Checksum;
         }
 
         /// <summary>
@@ -287,6 +288,7 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="algorithm">Algorithm to use</param>
         public void AddSignature(UpdateEntry entry, string algorithm)
         {
+            entry.Type = EntryType.Signature;
         }
 
         /// <summary>
