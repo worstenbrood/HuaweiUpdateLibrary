@@ -197,11 +197,11 @@ namespace HuaweiUpdateLibrary.Core
             // Set headersize
             entry.HeaderSize = (uint) (FileHeader.Size + (checksumTableSize*Utilities.UshortSize));
 
+            // Compute header checksum
+            entry.ComputeHeaderChecksum();
+
             using (var output = new FileStream(_fileName, FileMode.Append, FileAccess.Write, FileShare.None))
             {
-                // Compute header checksum
-                entry.ComputeHeaderChecksum();
-
                 // Get header
                 var header = entry.GetHeader();
 
@@ -278,6 +278,11 @@ namespace HuaweiUpdateLibrary.Core
         {
             var size = entry.FileSize + entry.HeaderSize;
             var offset = entry.DataOffset - entry.HeaderSize;
+
+
+
+            // Remove entry
+            Entries.Remove(entry);
         }
 
         /// <summary>

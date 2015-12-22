@@ -104,6 +104,25 @@ namespace HuaweiUpdateLibrary.Core
             private set { _fileHeader.BlockSize = value; }
         }
 
+        internal byte[] GetHeader()
+        {
+            byte[] result;
+
+            if (!Utilities.TypeToByte(_fileHeader, out result))
+                throw new Exception("TypeToByte() failed.");
+
+            return result;
+        }
+
+        internal void ComputeHeaderChecksum()
+        {
+            // Reset checksum
+            HeaderChecksum = 0;
+
+            // Calculate checksum
+            HeaderChecksum = Utilities.Crc.ComputeSum(GetHeader());
+        }
+
         private void OpenEntry(Stream stream, bool checksum)
         {
             var reader = new BinaryReader(stream);
@@ -306,29 +325,6 @@ namespace HuaweiUpdateLibrary.Core
             }
         }
 
-        /// <summary>
-        /// Get the FileHeader converted to a byte array
-        /// </summary>
-        /// <returns>Byte array</returns>
-        internal byte[] GetHeader()
-        {
-            byte[] result;
-
-            if (!Utilities.TypeToByte(_fileHeader, out result))
-                throw new Exception("TypeToByte() failed.");
-
-            return result;
-        }
-
-        internal void ComputeHeaderChecksum()
-        {
-            // Reset checksum
-            HeaderChecksum = 0;
-
-            // Calculate checksum
-            HeaderChecksum = Utilities.Crc.ComputeSum(GetHeader());
-        }
-        
         /// <summary>
         /// Write FileHeader to a stream
         /// </summary>
