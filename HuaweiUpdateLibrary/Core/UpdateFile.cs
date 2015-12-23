@@ -13,6 +13,7 @@
  *  
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -385,6 +386,52 @@ namespace HuaweiUpdateLibrary.Core
             }
         }
 
+        private static void MoveData(Stream stream, long from, long to, long length, int blockSize = CrcBlockSize)
+        {
+            // Save offsets
+            var readOffset = from;
+            var writeOffset = to;
+            
+            // Calculate distance
+            var distance = (from + length) - readOffset;
+
+            // Calculate next block size
+            var currBlockSize = (int)(distance > blockSize ? blockSize : distance);
+
+            // Allocate buffer
+            var buffer = new byte[blockSize];
+
+            // Process
+            while (currBlockSize != 0)
+            {
+                var bytesRead = 0;
+
+                // Jump to read offset
+                stream.Seek(readOffset, SeekOrigin.Begin);
+
+                // Read data
+                bytesRead = stream.Read(buffer, 0, currBlockSize);
+                if (bytesRead != currBlockSize)
+                    throw new Exception("Failed to read from stream: expected " + currBlockSize + " bytes, got " + bytesRead + " bytes");
+
+                // Jump to write offset
+                stream.Seek(writeOffset, SeekOrigin.Begin);
+
+                // Write data
+                stream.Write(buffer, 0, bytesRead);
+
+                // Increase offsets
+                readOffset += bytesRead;
+                writeOffset += bytesRead;
+
+                // Calculate distance
+                distance = (from + length) - readOffset;
+
+                // Calculate block size
+                currBlockSize = (int)(distance > blockSize ? blockSize : distance);
+            }
+        }
+
         /// <summary>
         /// Remove <see cref="UpdateEntry"/> from <see cref="UpdateFile"/>
         /// </summary>
@@ -403,9 +450,6 @@ namespace HuaweiUpdateLibrary.Core
             // Add remainder
             size += remainder;
             
-            // Allocate buffer
-            var buffer = new byte[blockSize];
-
             // Start offset to write to
             var writeOffset = entry.DataOffset - entry.HeaderSize;
 
@@ -415,34 +459,9 @@ namespace HuaweiUpdateLibrary.Core
             // Open stream
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             {
-                // Check if we're the last file
-                if (readOffset != stream.Length)
-                {
-                    var bytesRead = 0;
-
-                    do
-                    {
-                        // Jump to read offset
-                        stream.Seek(readOffset, SeekOrigin.Begin);
-
-                        // Read data
-                        bytesRead = stream.Read(buffer, 0, blockSize);
-                        if (bytesRead != 0)
-                        {
-                            // Jump to write offset
-                            stream.Seek(writeOffset, SeekOrigin.Begin);
-
-                            // Write data
-                            stream.Write(buffer, 0, bytesRead);
-
-                            // Increase offsets
-                            readOffset += bytesRead;
-                            writeOffset += bytesRead;
-                        }
-                    } 
-                    while (bytesRead != 0);
-                }
-
+                // Move data
+                MoveData(stream, readOffset, writeOffset, stream.Length - writeOffset - size);
+                
                 // Set new size
                 stream.SetLength(stream.Length - size);
             }
