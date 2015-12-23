@@ -204,8 +204,6 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="stream"><see cref="Stream"/> to input data</param>
         public void Add(UpdateEntry entry, Stream stream)
         {
-            entry.Type = EntryType.Normal;
-
             // Set size
             entry.FileSize = (uint) stream.Length;
 
