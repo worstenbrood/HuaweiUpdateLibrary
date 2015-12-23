@@ -28,7 +28,11 @@ namespace HuaweiUpdateLibrary.Core
         // Can be set by UpdateFile
         internal long DataOffset;
         internal ushort[] CheckSumTable;
-        internal EntryType Type;
+
+        /// <summary>
+        /// <see cref="EntryType"/>
+        /// </summary>
+        public EntryType Type { get; internal set; }
         
         /// <summary>
         /// Header Id

@@ -28,12 +28,6 @@ namespace HuaweiUpdateLibrary.Core
     {
         public const int CrcBlockSize = 32768;
 
-        private enum Mode
-        {
-            Open,
-            Create
-        }
-
         private const long SkipBytes = 92;
         private readonly string _fileName;
 
@@ -42,27 +36,22 @@ namespace HuaweiUpdateLibrary.Core
             return _fileName;
         }
 
-        private UpdateFile(string fileName, Mode mode, bool checksum = true, IdentifyEntry identify = null)
+        private UpdateFile(string fileName, bool checksum, IdentifyEntry identify)
         {
             // Store filename
             _fileName = fileName;
 
-            switch (mode)
-            {
-                case Mode.Open:
-                {
-                    // Load entries
-                    LoadEntries(checksum, identify);
-                    break;
-                }
+           // Load entries
+           LoadEntries(checksum, identify);
+        }
 
-                case Mode.Create:
-                {
-                    // Create file
-                    CreateFile();
-                    break;
-                }
-            }
+        private UpdateFile(string fileName)
+        {
+            // Store filename
+            _fileName = fileName;
+
+            // Load entries
+            CreateFile();
         }
 
         private List<UpdateEntry> _entries;
@@ -147,7 +136,7 @@ namespace HuaweiUpdateLibrary.Core
         /// <returns><see cref="UpdateFile"/></returns>
         public static UpdateFile Open(string fileName, bool checksum = true, IdentifyEntry identify = null)
         {
-            return new UpdateFile(fileName, Mode.Open, checksum);
+            return new UpdateFile(fileName, checksum, identify);
         }
 
         /// <summary>
@@ -157,7 +146,7 @@ namespace HuaweiUpdateLibrary.Core
         /// <returns><see cref="UpdateFile"/></returns>
         public static UpdateFile Create(string fileName)
         {
-            return new UpdateFile(fileName, Mode.Create);
+            return new UpdateFile(fileName);
         }
 
         /// <summary>
