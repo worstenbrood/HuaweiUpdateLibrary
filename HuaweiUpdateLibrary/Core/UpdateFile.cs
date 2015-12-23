@@ -386,7 +386,7 @@ namespace HuaweiUpdateLibrary.Core
             }
         }
 
-        private static void MoveData(Stream stream, long from, long to, long length, int blockSize = CrcBlockSize)
+        private static void MoveData(Stream stream, long from, long to, long length, int blockSize)
         {
             // Save offsets
             var readOffset = from;
@@ -399,18 +399,16 @@ namespace HuaweiUpdateLibrary.Core
             var currBlockSize = (int)(distance > blockSize ? blockSize : distance);
 
             // Allocate buffer
-            var buffer = new byte[blockSize];
+            var buffer = new byte[distance];
 
             // Process
             while (currBlockSize != 0)
             {
-                var bytesRead = 0;
-
                 // Jump to read offset
                 stream.Seek(readOffset, SeekOrigin.Begin);
 
                 // Read data
-                bytesRead = stream.Read(buffer, 0, currBlockSize);
+                var bytesRead = stream.Read(buffer, 0, currBlockSize);
                 if (bytesRead != currBlockSize)
                     throw new Exception("Failed to read from stream: expected " + currBlockSize + " bytes, got " + bytesRead + " bytes");
 
@@ -460,7 +458,7 @@ namespace HuaweiUpdateLibrary.Core
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             {
                 // Move data
-                MoveData(stream, readOffset, writeOffset, stream.Length - writeOffset - size);
+                MoveData(stream, readOffset, writeOffset, stream.Length - writeOffset - size, blockSize);
                 
                 // Set new size
                 stream.SetLength(stream.Length - size);
