@@ -410,7 +410,8 @@ namespace HuaweiUpdateLibrary.Core
                 // Read data
                 var bytesRead = stream.Read(buffer, 0, currBlockSize);
                 if (bytesRead != currBlockSize)
-                    throw new Exception("Failed to read from stream: expected " + currBlockSize + " bytes, got " + bytesRead + " bytes");
+                    throw new Exception(string.Format("Failed to read from stream @{0:X16}: expected {1} byte(s), got {2} byte(s)",
+                        stream.Position - bytesRead, currBlockSize, bytesRead));
 
                 // Jump to write offset
                 stream.Seek(writeOffset, SeekOrigin.Begin);
