@@ -396,7 +396,7 @@ namespace HuaweiUpdateLibrary.Core
             var distance = (from + length) - readOffset;
 
             // Calculate next block size
-            var currBlockSize = (int)(distance > blockSize ? blockSize : distance);
+            var currBlockSize = Convert.ToInt32(Math.Min(blockSize, distance));
 
             // Allocate buffer
             var buffer = new byte[distance];
@@ -426,7 +426,7 @@ namespace HuaweiUpdateLibrary.Core
                 distance = (from + length) - readOffset;
 
                 // Calculate block size
-                currBlockSize = (int)(distance > blockSize ? blockSize : distance);
+                currBlockSize = Convert.ToInt32(Math.Min(blockSize, distance));
             }
         }
 
