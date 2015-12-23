@@ -13,6 +13,7 @@
  *  
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -109,7 +110,7 @@ namespace HuaweiUpdateLibrary.Core
                     stream.Seek(entry.FileSize, SeekOrigin.Current);
 
                     // Read remainder
-                    var remainder = Utilities.UintSize - (int) (stream.Position%Utilities.UintSize);
+                    var remainder = Utilities.UintSize - (uint) (stream.Position%Utilities.UintSize);
                     if (remainder < Utilities.UintSize)
                         stream.Seek(remainder, SeekOrigin.Current);
                 }
@@ -210,7 +211,7 @@ namespace HuaweiUpdateLibrary.Core
 
             // Calculate checksum table size
             var checksumTableSize = entry.FileSize/entry.BlockSize;
-            if (entry.FileSize%entry.BlockSize != 0)
+            if ((entry.FileSize%entry.BlockSize) != 0)
                 checksumTableSize++;
 
             // Allocate checksum table
@@ -268,7 +269,7 @@ namespace HuaweiUpdateLibrary.Core
                 output.Seek(stream.Length, SeekOrigin.Current);
 
                 // Write remainder
-                var remainder = Utilities.UintSize - (int) (writer.BaseStream.Position%Utilities.UintSize);
+                var remainder = Utilities.UintSize - (uint) (writer.BaseStream.Position%Utilities.UintSize);
                 if (remainder < Utilities.UintSize)
                 {
                     // Write remainder bytes
@@ -389,13 +390,72 @@ namespace HuaweiUpdateLibrary.Core
         /// Remove <see cref="UpdateEntry"/> from <see cref="UpdateFile"/>
         /// </summary>
         /// <param name="entry"><see cref="UpdateEntry"/></param>
-        public void Remove(UpdateEntry entry)
+        /// <param name="blockSize">Block size used for reading/writing</param>
+        public void Remove(UpdateEntry entry, int blockSize = CrcBlockSize)
         {
+            // Calculate size
             var size = entry.HeaderSize + entry.FileSize;
-            var offset = entry.DataOffset - entry.HeaderSize;
+
+            // Calculate remainder
+            var remainder = Utilities.UintSize - (size%Utilities.UintSize);
+            if (remainder >= Utilities.UintSize)
+                remainder = 0;
+
+            // Add remainder
+            size += remainder;
             
+            // Allocate buffer
+            var buffer = new byte[blockSize];
+
+            // Start offset to write to
+            var writeOffset = entry.DataOffset - entry.HeaderSize;
+
+            // Start offset to read from
+            var readOffset = entry.DataOffset + entry.FileSize + remainder;
+
+            // Open stream
+            using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                // Check if we're the last file
+                if (readOffset != stream.Length)
+                {
+                    var bytesRead = 0;
+
+                    do
+                    {
+                        // Jump to read offset
+                        stream.Seek(readOffset, SeekOrigin.Begin);
+
+                        // Read data
+                        bytesRead = stream.Read(buffer, 0, blockSize);
+                        if (bytesRead != 0)
+                        {
+                            // Jump to write offset
+                            stream.Seek(writeOffset, SeekOrigin.Begin);
+
+                            // Write data
+                            stream.Write(buffer, 0, bytesRead);
+
+                            // Increase offsets
+                            readOffset += bytesRead;
+                            writeOffset += bytesRead;
+                        }
+                    } 
+                    while (bytesRead != 0);
+                }
+
+                // Set new size
+                stream.SetLength(stream.Length - size);
+            }
+
             // Remove entry
             Entries.Remove(entry);
+
+            // Adjust offset of other entries
+            foreach (var e in Entries.FindAll(e => e.DataOffset > entry.DataOffset))
+            {
+                e.DataOffset -= size;
+            }
         }
 
         /// <summary>

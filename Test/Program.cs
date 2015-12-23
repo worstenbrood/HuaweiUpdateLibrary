@@ -31,18 +31,15 @@ namespace Test
 
         static void Main(string[] args)
         {
+            
             var u = UpdateFile.Create(@"c:\temp\test.app");
             var e = UpdateEntry.Create();
-            e.FileSequence = 0xFF000000;
-            e.HardwareId = "HW8x50";
-            e.FileType = "IMAGE";
             u.Add(e, @"c:\temp\v1.14.zip");
             var crc = UpdateEntry.Create();
-            crc.FileSequence = 0xFFFFFFFF;
-            crc.FileType = "CRC";
-            crc.HardwareId = "HUAWEI";
             u.AddChecksum(crc);
-
+            u = UpdateFile.Open(@"c:\temp\test.app");
+            u.Remove(0);
+            u = UpdateFile.Open(@"c:\temp\test.app");
         }
     }
 }
