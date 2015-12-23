@@ -13,7 +13,6 @@
  *  
  */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -462,9 +461,10 @@ namespace HuaweiUpdateLibrary.Core
         /// Remove <see cref="UpdateEntry"/> at index
         /// </summary>
         /// <param name="index"><see cref="UpdateEntry"/> index</param>
-        public void Remove(int index)
+        /// <param name="blockSize">Block size used for reading/writing</param>
+        public void Remove(int index, int blockSize = CrcBlockSize)
         {
-            Remove(Entries[index]);
+            Remove(Entries[index], blockSize);
         }
 
         /// <summary>
