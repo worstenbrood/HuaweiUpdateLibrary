@@ -139,7 +139,7 @@ namespace HuaweiUpdateLibrary.Core
             HeaderChecksum = Utilities.Crc.ComputeSum(GetHeader());
         }
 
-        private void OpenEntry(Stream stream, bool checksum)
+        private void ReadEntry(Stream stream, bool checksum)
         {
             var reader = new BinaryReader(stream);
 
@@ -182,7 +182,7 @@ namespace HuaweiUpdateLibrary.Core
 
         private UpdateEntry(Stream stream, bool checksum)
         {
-            OpenEntry(stream, checksum);
+            ReadEntry(stream, checksum);
         }
 
         private void CreateEntry(ushort blockSize)
@@ -214,7 +214,7 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="stream"><see cref="Stream"/> to read from</param>
         /// <param name="checksum">Verify header checksum</param>
         /// <returns><see cref="UpdateEntry"/></returns>
-        public static UpdateEntry Open(Stream stream, bool checksum = true)
+        public static UpdateEntry Read(Stream stream, bool checksum = true)
         {
             return new UpdateEntry(stream, checksum);
         }
