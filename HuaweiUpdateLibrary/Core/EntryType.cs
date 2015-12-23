@@ -20,8 +20,8 @@ namespace HuaweiUpdateLibrary.Core
     [Flags] 
     public enum EntryType
     {
+        Normal,
         Checksum,
         Signature,
-        Normal
     }
 }
