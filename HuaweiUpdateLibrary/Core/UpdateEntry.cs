@@ -178,6 +178,9 @@ namespace HuaweiUpdateLibrary.Core
 
             // Save position of file data
             DataOffset = stream.Position;
+
+            // Set default entry type
+            Type = EntryType.Normal;
         }
 
         private UpdateEntry(Stream stream, bool checksum)

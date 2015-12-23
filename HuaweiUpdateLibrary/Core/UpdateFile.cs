@@ -42,7 +42,7 @@ namespace HuaweiUpdateLibrary.Core
             return _fileName;
         }
 
-        private UpdateFile(string fileName, Mode mode, bool checksum = true)
+        private UpdateFile(string fileName, Mode mode, bool checksum = true, IdentifyEntry identify = null)
         {
             // Store filename
             _fileName = fileName;
@@ -52,7 +52,7 @@ namespace HuaweiUpdateLibrary.Core
                 case Mode.Open:
                 {
                     // Load entries
-                    LoadEntries(checksum);
+                    LoadEntries(checksum, identify);
                     break;
                 }
 
@@ -90,7 +90,7 @@ namespace HuaweiUpdateLibrary.Core
             get { return Entries.Count; }
         }
 
-        private void LoadEntries(bool checksum)
+        private void LoadEntries(bool checksum, IdentifyEntry identify)
         {
             using (var stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -105,6 +105,9 @@ namespace HuaweiUpdateLibrary.Core
 
                     // Add to list
                     Entries.Add(entry);
+
+                    // Identify
+                    if (identify != null) entry.Type = identify(entry);
 
                     // Skip file data
                     stream.Seek(entry.FileSize, SeekOrigin.Current);
@@ -129,12 +132,20 @@ namespace HuaweiUpdateLibrary.Core
         }
 
         /// <summary>
+        /// Delegate to identify an <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="h"><see cref="UpdateEntry"/></param>
+        /// <returns><see cref="EntryType"/></returns>
+        public delegate EntryType IdentifyEntry(UpdateEntry h);
+
+        /// <summary>
         /// Open an existing update file
         /// </summary>
         /// <param name="fileName">Filename</param>
         /// <param name="checksum">Verify header checksum</param>
+        /// <param name="identify">Delegate to identify an <see cref="UpdateEntry"/></param>
         /// <returns><see cref="UpdateFile"/></returns>
-        public static UpdateFile Open(string fileName, bool checksum = true)
+        public static UpdateFile Open(string fileName, bool checksum = true, IdentifyEntry identify = null)
         {
             return new UpdateFile(fileName, Mode.Open, checksum);
         }
