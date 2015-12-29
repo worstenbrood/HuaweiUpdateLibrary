@@ -18,6 +18,9 @@ using System.IO;
 
 namespace HuaweiUpdateLibrary.Streams
 {
+    /// <summary>
+    /// Stream to a part of another stream
+    /// </summary>
     public class PartialStream : Stream
     {
         private readonly Stream _baseStream;

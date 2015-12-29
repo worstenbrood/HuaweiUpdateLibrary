@@ -19,8 +19,14 @@ using HuaweiUpdateLibrary.Streams;
 
 namespace HuaweiUpdateLibrary.Core
 {
+    /// <summary>
+    /// Class to work with entries inside an <see cref="UpdateFile"/>
+    /// </summary>
     public class UpdateEntry
     {
+        /// <summary>
+        /// Default block size for an <see cref="UpdateEntry"/>
+        /// </summary>
         public const ushort DefaultBlockSize = 4096;
         private const UInt32 FileMagic = 0xA55AAA55;
         private FileHeader _fileHeader;

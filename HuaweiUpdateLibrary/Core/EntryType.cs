@@ -17,11 +17,23 @@ using System;
 
 namespace HuaweiUpdateLibrary.Core
 {
-    [Flags] 
+    /// <summary>
+    /// Identifies an entry
+    /// </summary>
+    [Flags]
     public enum EntryType
     {
+        /// <summary>
+        /// Normal file
+        /// </summary>
         Normal,
+        /// <summary>
+        /// Checksum file
+        /// </summary>
         Checksum,
+        /// <summary>
+        /// Signature file
+        /// </summary>
         Signature,
     }
 }

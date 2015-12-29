@@ -24,13 +24,23 @@ using Org.BouncyCastle.Security;
 
 namespace HuaweiUpdateLibrary.Core
 {
+    /// <summary>
+    /// Class to work with Huawei update.app files
+    /// </summary>
     public class UpdateFile : IEnumerable<UpdateEntry>
     {
+        /// <summary>
+        /// Default CRC file block size
+        /// </summary>
         public const int CrcBlockSize = 32768;
 
         private const long SkipBytes = 92;
         private readonly string _fileName;
 
+        /// <summary>
+        /// Returns filename
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return _fileName;
