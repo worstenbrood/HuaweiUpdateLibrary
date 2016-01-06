@@ -79,6 +79,7 @@ namespace HuaweiUpdateLibrary.Core
         public UpdateEntry this[int index]
         {
             get { return Entries[index]; }
+            private set { }
         }
 
         /// <summary>
