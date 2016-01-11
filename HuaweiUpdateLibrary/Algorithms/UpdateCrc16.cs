@@ -18,6 +18,9 @@ using System.Security.Cryptography;
 
 namespace HuaweiUpdateLibrary.Algorithms
 {
+    /// <summary>
+    /// Crc algorithm
+    /// </summary>
     public class UpdateCrc16 : HashAlgorithm
     {
         private readonly ushort[] _table = new ushort[256];
@@ -47,6 +50,12 @@ namespace HuaweiUpdateLibrary.Algorithms
             }
         }
         
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="initialSum">Initial sum</param>
+        /// <param name="polynomial">Polynomial</param>
+        /// <param name="xorValue">Value used to xor final sum with</param>
         public UpdateCrc16(ushort initialSum = 0xFFFF, ushort polynomial = 0x8408, ushort xorValue = 0xFFFF)
         {
             _initialSum = BitConverter.GetBytes(initialSum);
@@ -60,11 +69,18 @@ namespace HuaweiUpdateLibrary.Algorithms
             HashValue = _initialSum;
         }
 
+        /// <summary>
+        /// Initializes an implementation of the <see cref="T:System.Security.Cryptography.HashAlgorithm"/> class.
+        /// </summary>
         public override void Initialize()
         {
             HashValue = _initialSum;
         }
 
+        /// <summary>
+        /// When overridden in a derived class, routes data written to the object into the hash algorithm for computing the hash.
+        /// </summary>
+        /// <param name="array">The input to compute the hash code for. </param><param name="ibStart">The offset into the byte array from which to begin using data. </param><param name="cbSize">The number of bytes in the byte array to use as data. </param>
         protected override void HashCore(byte[] array, int ibStart, int cbSize)
         {
             var sum = BitConverter.ToUInt16(HashValue, 0);
@@ -94,6 +110,12 @@ namespace HuaweiUpdateLibrary.Algorithms
             HashSizeValue = HashValue.Length;
         }
 
+        /// <summary>
+        /// When overridden in a derived class, finalizes the hash computation after the last data is processed by the cryptographic stream object.
+        /// </summary>
+        /// <returns>
+        /// The computed hash code.
+        /// </returns>
         protected override byte[] HashFinal()
         {
             var result = BitConverter.GetBytes((ushort)((BitConverter.ToUInt16(HashValue, 0) ^ _xorValue) & 0xFFFF));
@@ -104,21 +126,45 @@ namespace HuaweiUpdateLibrary.Algorithms
             return result;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         public UInt16 ComputeSum(byte[] buffer)
         {
             return ComputeSum(buffer, 0, buffer.Length);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public UInt16 ComputeSum(byte[] buffer, int offset, int count)
         {
             return BitConverter.ToUInt16(ComputeHash(buffer, offset, count), 0);
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the current transform can be reused.
+        /// </summary>
+        /// <returns>
+        /// Always true.
+        /// </returns>
         public override bool CanReuseTransform
         {
             get { return true; }
         }
 
+        /// <summary>
+        /// When overridden in a derived class, gets a value indicating whether multiple blocks can be transformed.
+        /// </summary>
+        /// <returns>
+        /// true if multiple blocks can be transformed; otherwise, false.
+        /// </returns>
         public override bool CanTransformMultipleBlocks
         {
             get { return true; }

@@ -229,6 +229,11 @@ namespace HuaweiUpdateLibrary.Core
             return new UpdateEntry(stream, checksum);
         }
 
+        /// <summary>
+        /// Create <see cref="UpdateEntry"/>
+        /// </summary>
+        /// <param name="blockSize">BlockSize</param>
+        /// <returns><see cref="UpdateEntry"/></returns>
         public static UpdateEntry Create(ushort blockSize = DefaultBlockSize)
         {
             return new UpdateEntry(blockSize);
