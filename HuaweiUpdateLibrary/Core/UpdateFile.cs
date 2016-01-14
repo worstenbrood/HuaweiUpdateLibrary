@@ -340,7 +340,9 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="blockSize">Block size</param>
         public void AddChecksum(UpdateEntry entry, int blockSize = CrcBlockSize)
         {
-            // TODO: Remove already existing ?
+            // Remove existing
+            var existing = Entries.FindAll(e => e.Type == EntryType.Checksum);
+            existing.ForEach(e => Remove(e));
 
             // Set entry type
             entry.Type = EntryType.Checksum;
@@ -368,7 +370,9 @@ namespace HuaweiUpdateLibrary.Core
         /// <param name="blockSize">Block size</param>
         public void AddSignature(UpdateEntry entry, string algorithm, string keyfile, int blockSize = CrcBlockSize)
         {
-            // TODO: Remove already existing ?
+            // Remove existing
+            var existing = Entries.FindAll(e => e.Type == EntryType.Signature);
+            existing.ForEach(e => Remove(e));
 
             // Set entry type
             entry.Type = EntryType.Signature;
