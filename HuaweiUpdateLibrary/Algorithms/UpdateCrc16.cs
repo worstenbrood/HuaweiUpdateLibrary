@@ -24,8 +24,8 @@ namespace HuaweiUpdateLibrary.Algorithms
     public class UpdateCrc16 : HashAlgorithm
     {
         private readonly ushort[] _table = new ushort[256];
-        private readonly ushort _polynomial = 0x8408;
-        private readonly ushort _xorValue = 0xFFFF;
+        private readonly ushort _polynomial;
+        private readonly ushort _xorValue;
         private readonly byte[] _initialSum;
         
         private void InitializeTable()
