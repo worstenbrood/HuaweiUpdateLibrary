@@ -95,5 +95,10 @@ namespace HuaweiUpdateLibrary.Core
             // Return string
             return Encoding.ASCII.GetString(source, 0, index);
         }
+
+        public static uint Remainder(UpdateEntry entry)
+        {
+            return UintSize - ((entry.HeaderSize + entry.FileSize) % UintSize);
+        }
     }
 }

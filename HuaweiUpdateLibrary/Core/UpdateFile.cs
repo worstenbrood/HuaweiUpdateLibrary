@@ -112,7 +112,7 @@ namespace HuaweiUpdateLibrary.Core
                     stream.Seek(entry.FileSize, SeekOrigin.Current);
 
                     // Read remainder
-                    var remainder = Utilities.UintSize - ((entry.HeaderSize+entry.FileSize)%Utilities.UintSize);
+                    var remainder = Utilities.Remainder(entry);
                     if (remainder < Utilities.UintSize)
                         stream.Seek(remainder, SeekOrigin.Current);
                 }
@@ -277,7 +277,7 @@ namespace HuaweiUpdateLibrary.Core
                 output.Seek(stream.Length, SeekOrigin.Current);
 
                 // Write remainder
-                var remainder = Utilities.UintSize - ((entry.HeaderSize+entry.FileSize)%Utilities.UintSize);
+                var remainder = Utilities.Remainder(entry);
                 if (remainder < Utilities.UintSize)
                 {
                     // Write remainder bytes
@@ -452,7 +452,7 @@ namespace HuaweiUpdateLibrary.Core
             var size = entry.HeaderSize + entry.FileSize;
 
             // Calculate remainder
-            var remainder = Utilities.UintSize - (size%Utilities.UintSize);
+            var remainder = Utilities.Remainder(entry);
             if (remainder >= Utilities.UintSize)
                 remainder = 0;
 
